@@ -1,0 +1,3 @@
+#!/bin/bash
+
+qmake -qt=5 -o Makefile asxp.pro

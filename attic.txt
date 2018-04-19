@@ -1,0 +1,619 @@
+
+
+void get_cross_field_poly(double vf1[win_size][win_size][2],
+								double vf2[win_size][win_size][2], int cx, int cy, double* cfpoly)
+{
+
+	double v1x = vf1[cx][cy][0];
+	double v1y = vf1[cx][cy][1];
+
+	double v2x = vf2[cx][cy][0];
+	double v2y = vf2[cx][cy][1];
+
+	full_normalize_vec(v1x, v1y);
+	full_normalize_vec(v2x, v2y);
+
+	const double eps = 1e-6;
+
+	if (Q_NORM(v1x, v1y) > 0) {
+		assert(fabs(Q_NORM(v1x, v1y) - 1) < eps);
+	}
+	if (Q_NORM(v2x, v2y) > 0) {
+		assert(fabs(Q_NORM(v2x, v2y) - 1) < eps);
+	}
+
+	cfpoly[0] = v1y * v2y;
+	cfpoly[1] = -(v1x * v2y + v1y * v2x);
+	cfpoly[2] = v1x * v2x;
+
+	double normcfpoly = m_norm(cfpoly, 3);
+
+	m_skalmult(1/normcfpoly, cfpoly, cfpoly, 3);
+
+	double sign = 0;
+
+	for(int i = 0; i < 3; ++i) {
+		if (cfpoly[i] == 0) {
+			continue;
+		} else {
+			sign = SIGN(cfpoly[i]);
+			break;
+		}
+	}
+
+	for(int i = 0; i < 3; ++i) {
+		cfpoly[i] *= sign;
+	}
+
+}
+
+void get_cross_field_from_poly(double* cf_poly, double & v1x, double & v1y, double & v2x, double & v2y)
+{
+	double a = cf_poly[0];
+	double b = cf_poly[1];
+	double c = cf_poly[2];
+
+	double x1, x2;
+
+	quadratic_solve(a, b, c, x1, x2);
+
+	double root = (x1 == 0) ? x2 : x1;
+
+	v1x = v1y = v2x = v2y = 0;
+
+	if (a != 0) {
+
+		// form is (a x^2 + b x y + c y^2)
+
+		if (root == 0) {
+
+			// both roots are zero, form is (a x^2)
+
+			v1x = 0;
+			v1y = 1;
+			v2x = 0;
+			v2y = 1;
+		} else {
+
+			v1x = c;
+			v1y = a * root;
+
+			v2x = root;
+			v2y = 1;
+		}
+	} else {
+		if (b != 0) {
+
+			// form is b x y + c y^2 = y (b x + c y)
+
+			v1x = 1;
+			v1y = 0;
+			v2x = c;
+			v2y = -b;
+
+		} else if (c != 0) {
+
+			// form is c y^2
+
+			v1x = 1;
+			v1y = 0;
+			v2x = 1;
+			v2y = 0;
+		}
+	}
+
+	full_normalize_vec(v1x, v1y);
+	full_normalize_vec(v2x, v2y);
+
+
+}
+
+
+//#define TRY_INTERP
+
+#ifdef TRY_INTERP
+	double sx = xrast - cx;
+	double sy = yrast - cy;
+
+	assert (sx <= 1 && sy <= 1);
+
+	double cfpa[3];
+	double cfpb[3];
+	double cfpc[3];
+	double cfpd[3];
+
+	get_cross_field_poly(vf1, vf2, cx, cy + 1, cfpa );
+	get_cross_field_poly(vf1, vf2, cx + 1, cy + 1, cfpb);
+	get_cross_field_poly(vf1, vf2, cx, cy, cfpc);
+	get_cross_field_poly(vf1, vf2, cx + 1, cy, cfpd);
+
+	double cfp_res[3];
+
+	for(int i = 0; i < 3; ++i) {
+		cfp_res[i] = bilin_interpolate(cfpa[i], cfpb[i], cfpc[i], cfpd[i], sx, sy);
+	}
+
+	double normcfpres = m_norm(cfp_res, 3);
+	m_skalmult(1/normcfpres, cfp_res, cfp_res, 3);
+
+	double sign = 0;
+
+	for(int i = 0; i < 3; ++i) {
+		if (cfp_res[i] == 0) {
+			continue;
+		} else {
+			sign = SIGN(cfp_res[i]);
+			break;
+		}
+	}
+
+	for(int i = 0; i < 3; ++i) {
+		cfp_res[i] *= sign;
+	}
+
+
+
+	double p_a = 0, p_b = 0, p_c = 0, p_d = 0;
+
+	p_a = m_skalprod(cfpa, cfp_res, 3);
+	p_b = m_skalprod(cfpb, cfp_res, 3);
+	p_c = m_skalprod(cfpc, cfp_res, 3);
+	p_d = m_skalprod(cfpd, cfp_res, 3);
+
+	p_a = TO_GRAD(acos(p_a));
+	p_b = TO_GRAD(acos(p_b));
+	p_c = TO_GRAD(acos(p_c));
+	p_d = TO_GRAD(acos(p_d));
+
+	const double phiallow = 5;
+
+	if (fabs(p_a - 90) < 90 - phiallow && m_norm(cfpa, 3) > 0) {
+		printf("err_a = %f (%f, %f, %f) (%f, %f, %f)\n", p_a, cfpa[0], cfpa[1], cfpa[2], cfp_res[0], cfp_res[1], cfp_res[2]);
+	}
+	if (fabs(p_b - 90) < 90 - phiallow && m_norm(cfpb, 3) > 0) {
+		printf("err_b = %f (%f, %f, %f) (%f, %f, %f)\n", p_b, cfpb[0], cfpb[1], cfpb[2], cfp_res[0], cfp_res[1], cfp_res[2]);
+	}
+	if (fabs(p_c - 90) < 90 - phiallow && m_norm(cfpc, 3) > 0) {
+		printf("err_c = %f (%f, %f, %f) (%f, %f, %f)\n", p_c, cfpc[0], cfpc[1], cfpc[2], cfp_res[0], cfp_res[1], cfp_res[2]);
+	}
+	if (fabs(p_d - 90) < 90 - phiallow && m_norm(cfpd, 3) > 0) {
+		printf("err_d = %f (%f, %f, %f) (%f, %f, %f)\n", p_d, cfpd[0], cfpd[1], cfpd[2], cfp_res[0], cfp_res[1], cfp_res[2]);
+	}
+
+
+
+	get_cross_field_from_poly(cfp_res, v1x, v1y, v2x, v2y);
+
+#endif
+
+
+
+int init_f5(QString f5str)
+{
+
+	f5.read(f5str.toLatin1().data());
+
+	return 0;
+
+#if 0
+
+int select = 0;
+
+Poly5 p1;
+
+switch (select) {
+
+case 0:
+	// -10 + a*x^2 + b * y^2 + z^2
+	// quadric
+
+	f5.read("-10 + a * x^2 + b * y^2 + z^2");
+/*
+	f5 = (Poly5(-10,0,0));
+	p1 = Poly5(1, 0, 2); // x^2
+	p1.mul(Poly5(1, 3, 1)); // a
+	f5.add(p1);
+	p1 = Poly5(1,1,2); // y^2
+	p1.mul(Poly5(1,4,1)); // b
+	f5.add(p1);
+	f5.add(Poly5(1,2,2));
+*/
+	break;
+
+case 1:
+
+	// sphere
+	f5.read("-5^2 + x^2 + y^2 + z^2");
+
+	break;
+
+case 2:
+
+	// our standard quartic
+
+	f5.read("-10 + a * x^2 + b * y^2 + a * x^2 * z + b * y^3 * z + a * x * z^2");
+
+	/*
+	 *  the reference for the quartic above
+	 *
+		aijk[0][0][0] = -10;
+		aijk[2][0][0] = parm[0];
+		aijk[0][2][0] = parm[1];
+		aijk[2][0][1] = parm[0];
+		aijk[0][3][1] = parm[1];
+		aijk[1][0][2] = parm[0];
+	*/
+	break;
+
+default:
+/*
+* Clebsch's famous cubic:
+*
+*/
+	f5.read(
+	"-6*x*y*z -3*x^2 -6*x*y -6*x*z -3*y^2 -6 * y * z -3 * z^2 -3 * x^2 * y -3 * x^2 *z"
+	"-3 * x* y^2 -3 * x * z^2 -3 * y^2 *z -3 * y * z^2 -3 * x -3 * y -3 * z"
+	"");
+	break;
+
+
+}
+
+	return 0;
+
+#endif
+
+}
+
+
+
+void render_pyramid(Polyhedron::Facet_handle & fit, Polyhedron::Facet_handle & fit_opp,
+						Polyhedron::Halfedge_handle & h_fit)
+{
+	char buf[1024];
+	const double h = 0.1;
+
+	Polyhedron::Vertex_handle h_star = h_fit->next()->next()->vertex();
+	Polyhedron::Halfedge_handle h_fit_opp = h_fit->opposite();
+	Polyhedron::Vertex_handle h_star_opp = h_fit_opp->next()->next()->vertex();
+
+	Polyhedron::Vertex_handle v1 = h_fit->vertex();
+	Polyhedron::Vertex_handle v2 = h_fit->next()->vertex();
+
+	Vector_3 n1 = getNormalPVH(v1);
+	Vector_3 n2 = getNormalPVH(v2);
+
+	Point_3 p1 = v1->point();
+	Point_3 p2 = v2->point();
+
+
+	Point_3 q1 = p1 - h * n1;
+	Point_3 q2 = p2 - h * n2;
+
+	Point_3 r1 = p1 + h * n1;
+	Point_3 r2 = p2 + h * n2;
+
+	Point_3 u_star = h_star->point();
+	Point_3 u_star_opp = h_star_opp->point();
+
+	sprintf(buf, "renderpyr(%.12f, %.12f, %.12f,"
+					       "  %.12f, %.12f, %.12f,  %.12f, %.12f, %.12f,"
+						   "  %.12f, %.12f, %.12f,  %.12f, %.12f, %.12f,"
+						   "  %.12f, %.12f, %.12f);",
+						   u_star.x(), u_star.y(), u_star.z(),
+						   q1.x(), q1.y(), q1.z(), r1.x(), r1.y(), r1.z(),
+						   q2.x(), q2.y(), q2.z(), r2.x(), r2.y(), r2.z(),
+						   u_star_opp.x(), u_star_opp.y(), u_star_opp.z());
+
+	ofscad << buf << std::endl;
+
+
+
+}
+
+
+
+template <class HDS>
+class Copy_polyhedron : public CGAL::Modifier_base<HDS> {
+public:
+    Copy_polyhedron(Polyhedron & ph_rhsa):polyhedron_rhs(ph_rhsa) {};
+    void operator() (HDS& hds);
+
+    Polyhedron & polyhedron_rhs;
+};
+
+template <class HDS>
+class Union_polyhedron : public CGAL::Modifier_base<HDS> {
+public:
+    Union_polyhedron(Polyhedron & ph_rhs1, Polyhedron & ph_rhs2):polyhedron_rhs1(ph_rhs1),
+    	polyhedron_rhs2(ph_rhs2) {};
+    void operator() (HDS& hds);
+
+    Polyhedron & polyhedron_rhs1;
+    Polyhedron & polyhedron_rhs2;
+};
+
+
+
+template<class HDS>
+void Copy_polyhedron<HDS>::operator()( HDS& hds)
+{
+
+	// Postcondition: hds is a valid polyhedral surface.
+
+    CGAL::Polyhedron_incremental_builder_3<HDS> B(hds, true);
+	B.begin_surface(polyhedron_rhs.size_of_vertices(), polyhedron_rhs.size_of_facets() );
+
+    std::map< Polyhedron::Vertex_iterator, int > vtoi_map;
+    int cnt = 0;
+
+    for(Polyhedron::Vertex_iterator vit = polyhedron_rhs.vertices_begin(); vit != polyhedron_rhs.vertices_end(); ++vit) {
+    	B.add_vertex(vit->point());
+    	vtoi_map[vit] = cnt;
+    	++cnt;
+    }
+
+    for(Polyhedron::Facet_iterator fit = polyhedron_rhs.facets_begin(); fit != polyhedron_rhs.facets_end(); ++fit) {
+
+		Polyhedron::Facet::Halfedge_around_facet_circulator
+				hedge_it = fit->facet_begin();
+		Polyhedron::Facet::Halfedge_around_facet_circulator
+				hedge_it_start = hedge_it;
+
+		Polyhedron::Vertex_handle v1 = hedge_it->vertex();
+
+		++hedge_it;
+
+		Polyhedron::Vertex_handle v2 = hedge_it->vertex();
+
+		++hedge_it;
+
+		Polyhedron::Vertex_handle v3 = hedge_it->vertex();
+
+		++hedge_it;
+
+		B.begin_facet();
+		B.add_vertex_to_facet(vtoi_map[v1]);
+		B.add_vertex_to_facet(vtoi_map[v2]);
+		B.add_vertex_to_facet(vtoi_map[v3]);
+		B.end_facet();
+
+    }
+
+    B.end_surface();
+}
+
+template<class HDS>
+void Union_polyhedron<HDS>::operator()( HDS& hds)
+{
+
+	// Postcondition: hds is a valid polyhedral surface.
+
+	std::cout << "enter Union_polyhedron::operator()" << std::endl;
+	std::cout << "size(vert1) = " << polyhedron_rhs1.size_of_vertices() << std::endl;
+	std::cout << "size(vert2) = " << polyhedron_rhs2.size_of_vertices() << std::endl;
+	std::cout << "size(facets1) = " << polyhedron_rhs1.size_of_facets() << std::endl;
+	std::cout << "size(facets2) = " << polyhedron_rhs2.size_of_facets() << std::endl;
+
+
+    CGAL::Polyhedron_incremental_builder_3<HDS> B(hds, true);
+	B.begin_surface(polyhedron_rhs1.size_of_vertices() + polyhedron_rhs2.size_of_vertices(),
+			polyhedron_rhs1.size_of_facets() + polyhedron_rhs2.size_of_facets() );
+
+	std::cout << "before vtoi_map" << std::endl;
+
+    std::map< Polyhedron::Vertex_iterator, int > vtoi_map;
+    int cnt = 0;
+
+    std::cout << "start vertices..." << std::endl;
+
+    for(Polyhedron::Vertex_iterator vit = polyhedron_rhs1.vertices_begin(); vit != polyhedron_rhs1.vertices_end(); ++vit) {
+    	B.add_vertex(vit->point());
+    	vtoi_map[vit] = cnt;
+    	++cnt;
+    	//std::cout << "cnt = " << cnt << std::endl;
+    }
+
+    for(Polyhedron::Vertex_iterator vit = polyhedron_rhs2.vertices_begin(); vit != polyhedron_rhs2.vertices_end(); ++vit) {
+    	B.add_vertex(vit->point());
+    	vtoi_map[vit] = cnt;
+    	++cnt;
+    	//std::cout << "cnt = " << cnt << std::endl;
+    }
+
+    std::cout << "...vertices done." << std::endl;
+
+
+    for(Polyhedron::Facet_iterator fit = polyhedron_rhs1.facets_begin(); fit != polyhedron_rhs1.facets_end(); ++fit) {
+
+		Polyhedron::Facet::Halfedge_around_facet_circulator
+				hedge_it = fit->facet_begin();
+		Polyhedron::Facet::Halfedge_around_facet_circulator
+				hedge_it_start = hedge_it;
+
+		Polyhedron::Vertex_handle v1 = hedge_it->vertex();
+
+		++hedge_it;
+
+		Polyhedron::Vertex_handle v2 = hedge_it->vertex();
+
+		++hedge_it;
+
+		Polyhedron::Vertex_handle v3 = hedge_it->vertex();
+
+		++hedge_it;
+
+		B.begin_facet();
+		B.add_vertex_to_facet(vtoi_map[v1]);
+		B.add_vertex_to_facet(vtoi_map[v2]);
+		B.add_vertex_to_facet(vtoi_map[v3]);
+		B.end_facet();
+
+    }
+    for(Polyhedron::Facet_iterator fit = polyhedron_rhs2.facets_begin(); fit != polyhedron_rhs2.facets_end(); ++fit) {
+
+		Polyhedron::Facet::Halfedge_around_facet_circulator
+				hedge_it = fit->facet_begin();
+		Polyhedron::Facet::Halfedge_around_facet_circulator
+				hedge_it_start = hedge_it;
+
+		Polyhedron::Vertex_handle v1 = hedge_it->vertex();
+
+		++hedge_it;
+
+		Polyhedron::Vertex_handle v2 = hedge_it->vertex();
+
+		++hedge_it;
+
+		Polyhedron::Vertex_handle v3 = hedge_it->vertex();
+
+		++hedge_it;
+
+		B.begin_facet();
+		B.add_vertex_to_facet(vtoi_map[v1]);
+		B.add_vertex_to_facet(vtoi_map[v2]);
+		B.add_vertex_to_facet(vtoi_map[v3]);
+		B.end_facet();
+
+    }
+
+    std::cout << "...faces done." << std::endl;
+
+    B.end_surface();
+}
+
+
+
+typedef std::pair< Vertex_handle, Vertex_handle > VertexPair;
+typedef std::map< VertexPair, int> VertexPairMap;
+
+
+VertexPairMap vpair_map;
+
+std::map< Vertex_handle, int> singular_vertex_map;
+
+void mark_vertex_singular(Vertex_handle v1)
+{
+	if (singular_vertex_map.count(v1) == 0) {
+		singular_vertex_map[v1] = 1;
+	}
+}
+
+bool is_vertex_singular(const Vertex_handle & v)
+{
+	return singular_vertex_map.count(v) > 0;
+}
+
+void add_vertex_pair(const Vertex_handle & v1, const Vertex_handle & v2)
+{
+	VertexPair vp1(v1, v2);
+
+	if (vpair_map.count(vp1) == 0) {
+		vpair_map[vp1] = 1;
+	} else {
+		vpair_map[vp1] = vpair_map[vp1] + 1;
+	}
+}
+
+void compute_singular_set_1()
+{
+
+	vpair_map.clear();
+	singular_vertex_map.clear();
+
+	for(C2t3::Facet_iterator fit = c2t3->facets_begin(); fit != c2t3->facets_end(); ++fit) {
+
+		const Tr::Cell_handle& cell = fit->first;
+		const int index = fit->second;
+
+		Vertex_handle v1 = cell->vertex(trx->vertex_triple_index(index, 0));
+		Vertex_handle v2 = cell->vertex(trx->vertex_triple_index(index, 1));
+		Vertex_handle v3 = cell->vertex(trx->vertex_triple_index(index, 2));
+
+
+		Point_3 p1 = v1->point();
+		Point_3 p2 = v2->point();
+		Point_3 p3 = v3->point();
+
+		Vector_3 & n1 = getNormal(vtoi_map[v1]);
+
+		if (!CGAL::collinear(p1, p2, p3)) {
+			Vector_3 nn = CGAL::unit_normal(p1, p2, p3);
+
+			if (nn * n1 < 0) {
+				std::swap(v2, v3);
+			}
+		}
+
+		add_vertex_pair(v1, v2);
+		add_vertex_pair(v2, v3);
+		add_vertex_pair(v3, v1);
+
+	}
+
+	int cnt_sing = 0;
+
+	for(VertexPairMap::iterator it = vpair_map.begin(); it != vpair_map.end(); ++it) {
+		if (it->second > 1) {
+			mark_vertex_singular(it->first.first);
+			mark_vertex_singular(it->first.second);
+			++cnt_sing;
+		}
+	}
+
+	std::cout << "singular_cnt = " << cnt_sing << std::endl;
+}
+
+std::map< Vertex_handle, EquivalenceClasses< Vertex_handle> > equiv_map;
+
+void insert_equivalent(Vertex_handle & v1, Vertex_handle & v2, Vertex_handle & v3)
+{
+	equiv_map[v1].insert(v2, v3);
+}
+
+void compute_singular_set_2()
+{
+	equiv_map.clear();
+
+	for(C2t3::Facet_iterator fit = c2t3->facets_begin(); fit != c2t3->facets_end(); ++fit) {
+
+		const Tr::Cell_handle& cell = fit->first;
+		const int index = fit->second;
+
+		Vertex_handle v1 = cell->vertex((index + 1) & 3);
+		Vertex_handle v2 = cell->vertex((index + 2) & 3);
+		Vertex_handle v3 = cell->vertex((index + 3) & 3);
+
+		insert_equivalent(v1, v2, v3);
+		insert_equivalent(v2, v1, v3);
+		insert_equivalent(v3, v1, v2);
+
+	}
+
+	for(C2t3::Vertex_iterator vit = c2t3->vertices_begin(); vit != c2t3->vertices_end(); ++ vit) {
+		if (equiv_map[vit].num_classes() > 1) {
+			mark_vertex_singular(vit);
+		}
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,5 @@
+
+LD_LIBRARY_PATH=/home/juergen/software/CGAL-4.7/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
+
+

@@ -1,0 +1,10 @@
+objs/pimage.o: pimage.cu pimage_local.h ../pimage.h ppoly.cu
+
+pimage_local.h:
+
+../pimage.h:
+
+ppoly.cu:
+objs/ppoly.o: ppoly.cu pimage_local.h
+
+pimage_local.h:
