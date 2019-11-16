@@ -40,7 +40,7 @@ class Streamplot {
 
 public:
 
-	static const double d_default = 10;
+	static constexpr double d_default = 10;
 
 	Streamplot(Array3d_double* vf1a, Array3d_double* vf2a, int xmaxa, int ymaxa, double da,
 				Scale xrast_to_xa, Scale yrast_to_ya, Scale x_to_xrasta, Scale y_to_yrasta,

@@ -1,10 +1,35 @@
-GPUCRYPTO_DIR = ./
 
-include Makefile.in
+CUDA_TOOLKIT_DIR = /usr/local/cuda
+#CUDA_SDK_DIR = /home/$(USER)/NVIDIA_GPU_Computing_SDK
+
+#generic config
+CC = g++
+CFLAGS = -O2 -g -Wall
+
+#INC = $(OPENSSL_INCDIR)
+
+#CUDA related config
+
+NVCC = nvcc
+
+NVCFLAGS= -O2 --use_fast_math
+
+NVINC = -I/usr/local/cuda/include -I/usr/local/cuda-10.1/samples/common/inc/
+
+CUDA_LIBDIR = -L$(CUDA_TOOLKIT_DIR)/lib64
+CUDA_LIBS = -lcudart
+
+NVCFLAGS += -gencode arch=compute_50,code=sm_50
+
+#NVCFLAGS += -rdc=true --compiler-options '-fPIC'
+#NVCFLAGS += --compiler-options '-fPIC'
+
 
 OBJS_DIR = objs
+
 TARGET_DIR = lib
 TARGET_FILE = libasxp.a
+
 TARGET = $(addprefix $(TARGET_DIR)/, $(TARGET_FILE))
 
 .SUFFIXES : .cu .cc .o
@@ -37,11 +62,8 @@ $(DEPS): $(SRC_FILES) $(HEADER_FILES)
 $(OBJS_DIR)/%.o : %.cc
 	$(CC) $(CFLAGS) $(INC) $(NVINC) -c $< -o $@
 
-$(OBJS_DIR)/%.o: ppoly.cu pimage.cu
+$(OBJS_DIR)/%.o: pimage.cu
 	$(NVCC) $(NVCFLAGS) $(NVINC) -c pimage.cu -o $(OBJS_DIR)/pimage.o
-#	$(NVCC) $(NVCFLAGS) $(NVINC) -dc pimage.cu -o $(OBJS_DIR)/pimage.o
-#	$(NVCC) $(NVCFLAGS) -dlink $(OBJS_DIR)/ppoly.o $(OBJS_DIR)/pimage.o -o phelp.o -L/usr/local/cuda/lib \
-#		-L/usr/lib -lcuda -lcudart -lcudadevrt
 		
 
 
@@ -49,10 +71,10 @@ $(OBJS_DIR)/%.o: ppoly.cu pimage.cu
 
 clean:
 	rm -f $(TARGET) $(OBJS) $(DEPS)
-	rm -f phelp.o
 
-doc: $(SRC_FILES) doxygen.config
-	doxygen doxygen.config
+
+#doc: $(SRC_FILES) doxygen.config
+#	doxygen doxygen.config
 
 ifneq ($(MAKECMDGOALS), clean)
 -include $(DEPS)

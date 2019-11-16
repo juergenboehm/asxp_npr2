@@ -1549,7 +1549,7 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
     if (mouse_moved) {
 		char buf[128];
 		sprintf(buf, "%.3f %.3f", a, b);
-		painter->setPen(QPen(Qt::white));
+		painter->setPen(QPen(Qt::blue));
 		painter->fillRect(99,100 - 12, 150, 13, background);
 		painter->drawText(100,100, QString(buf));
     }
@@ -1735,7 +1735,7 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 
     char buf[128];
     sprintf(buf, "%.3f %.3f", a, b);
-    painter->setPen(QPen(Qt::white));
+    painter->setPen(QPen(Qt::blue));
     painter->drawText(100,100, QString(buf));
 
 }

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
+#include <assert.h>
 
 #include "pimage_local.h"
 
@@ -21,9 +22,12 @@ using namespace std;
 
 const int gl_win_size = 800;
 
-const int phong_exponent = 32;
+const double phong_exponent = 1.5;
+
+const double zeye_global = 25;
 
 __device__ int akt_deg_global;
+
 
 #include "ppoly.cu"
 
@@ -110,6 +114,52 @@ static __device__ int akt_deg;
 static __device__ double akt_xbase[max_deg+1] = { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 };
 
 static __device__ double lagrange_basis[max_deg+1][max_deg+1];
+
+
+__device__ double cuda_skalp_3(double* x, double* y)
+{
+	return x[0]*y[0] + x[1] * y[1] + x[2] * y[2];
+}
+
+
+__device__ void cuda_skalmult_3(double c, double *x)
+{
+	x[0] *= c;
+	x[1] *= c;
+	x[2] *= c;
+}
+
+__device__ void cuda_norml_3(double* x)
+{
+	double len = sqrt(cuda_skalp_3(x,x));
+	if (len > 0) {
+		cuda_skalmult_3(1/len, x);
+	}
+}
+
+__device__ void cuda_vecadd_3(double * z, double *x, double *y)
+{
+	z[0] = x[0] + y[0];
+	z[1] = x[1] + y[1];
+	z[2] = x[2] + y[2];
+
+}
+
+__device__ void cuda_vecsub_3(double * z, double *x, double *y)
+{
+	z[0] = x[0] - y[0];
+	z[1] = x[1] - y[1];
+	z[2] = x[2] - y[2];
+
+}
+
+
+
+__device__ double cuda_zscale_factor(double z)
+{
+	return ((z - zeye_global)/(0 - zeye_global));
+}
+
 
 __device__ void cuda_lb_poly_mult(int deg, double * coefs, double a)
 {
@@ -328,6 +378,40 @@ __device__ int cuda_eval_coefs_poly(cudaPoly3 & f3, double x, double y, double* 
 }
 
 
+__device__ int cuda_eval_coefs_poly_centr_persp(cudaPoly3 & f3, double x, double y, double* coefs_lis)
+{
+	// hier die Lagrangeinterpolation einfügen
+	// z wird nacheinander z0, z1, z2,....zn gesetzt mit n = deg f3
+	// m_euler wird zur Substitution der x y z benutzt
+
+	double sl[3];
+	double coefs[max_deg + 1];
+	for(int i = 0; i <= max_deg; ++i) {
+		coefs[i] = 0;
+	}
+	for(int i = 0; i <= akt_deg_global; ++i) {
+		double z = akt_xbase[i];
+
+		double zscale_factor = cuda_zscale_factor(z);
+
+		sl[0] = x * zscale_factor;
+		sl[1] = y * zscale_factor;
+		sl[2] = z;
+		double fi = cuda_eval_f3_mat(f3, sl);
+		for(int j = 0; j <= akt_deg_global; ++j) {
+			coefs[j] += fi * lagrange_basis[i][j];
+		}
+	}
+
+	memcpy(coefs_lis, coefs, sizeof(coefs));
+
+	return 0;
+}
+
+
+
+
+
 __global__ void cuda_rotate_mat(double phi, double theta, double psi)
 {
 	const int ndim = 3;
@@ -409,7 +493,7 @@ __device__ void cuda_normalize_poly_coefs(double* poly_coefs, int akt_deg, int &
 }
 
 
-__device__ int cuda_get_z_intersect_poly(double x, double y, double *z, double *n_z, bool & disc_zero)
+__device__ int cuda_get_z_intersect_poly(double x, double y, double *z, double *n_xyz, bool & disc_zero)
 {
 
 #if 0
@@ -442,7 +526,9 @@ __device__ int cuda_get_z_intersect_poly(double x, double y, double *z, double *
 	double z_erg_new = M_INF;
 	double z_erg_list[max_deg + 1];
 
-	cuda_eval_coefs_poly(f3, x, y, poly_coefs);
+	//cuda_eval_coefs_poly(f3, x, y, poly_coefs);
+	cuda_eval_coefs_poly_centr_persp(f3, x, y, poly_coefs);
+
 
 	// coefficient of leading monomial is in poly_coefs[0]
 	// akt_deg is intended degree
@@ -471,8 +557,16 @@ __device__ int cuda_get_z_intersect_poly(double x, double y, double *z, double *
 		int j;
 
 		j = num_z_erg - 1;
+
+
 		while (j >= 0) {
-			if (cuda_in_clip_radius(x,y,z_erg_list[j])) {
+
+			double zsf = cuda_zscale_factor(z_erg_list[j]);
+
+			double x1 = x * zsf;
+			double y1 = y * zsf;
+
+			if (cuda_in_clip_radius(x1,y1,z_erg_list[j])) {
 				//cout << "num_z_erg = " << num_z_erg << " j = " << j << " z_erg_new = " << z_erg_list[j] << endl;
 				z_erg_new = z_erg_list[j];
 				break;
@@ -486,8 +580,14 @@ __device__ int cuda_get_z_intersect_poly(double x, double y, double *z, double *
 
 	z_erg = z_erg_new;
 
+	double zsf = cuda_zscale_factor(z_erg);
 
-	if (! cuda_in_clip_radius(x, y, z_erg)) {
+	double x1 = x * zsf;
+	double y1 = y * zsf;
+
+
+
+	if (! cuda_in_clip_radius(x1, y1, z_erg)) {
 		z_erg = M_INF;
 	}
 
@@ -495,10 +595,16 @@ __device__ int cuda_get_z_intersect_poly(double x, double y, double *z, double *
 
 	if (z_erg > M_INF) {
 		double f, fx, fy, fz;
-		cuda_eval_poly_poly(f3, x, y, z_erg, f, fx, fy, fz);
-		*n_z = fz/sqrt(fx*fx+fy*fy+fz*fz);
+		cuda_eval_poly_poly(f3, x1, y1, z_erg, f, fx, fy, fz);
+		n_xyz[0] = fx;
+		n_xyz[1] = fy;
+		n_xyz[2] = fz;
+		cuda_norml_3(n_xyz);
+		//*n_z = fz/sqrt(fx*fx+fy*fy+fz*fz);
 	} else {
-		*n_z = 0;
+		n_xyz[0] = 0;
+		n_xyz[1] = 0;
+		n_xyz[2] = 0;
 	}
 
 	return 0;
@@ -528,7 +634,8 @@ __global__ void compute_colmat(double a, double b, int xmax, int ymax,
 
 	double n;
 	double x1, y1;
-	double z, n_z;
+	double z;
+	double n_xyz[3];
 	double local_scale;
 
 	int win_offset;
@@ -545,12 +652,17 @@ __global__ void compute_colmat(double a, double b, int xmax, int ymax,
 
 	local_scale = gl_win_size/xmax;
 
-	y1 = (yy - win_offset)/SCALE * local_scale;
-    x1 = (xx - win_offset)/SCALE * local_scale;
+	//y1 = (yy - win_offset)/SCALE * local_scale;
+    //x1 = (xx - win_offset)/SCALE * local_scale;
+
+	y1 = (yy - win_offset)/(0.8 * SCALE) * local_scale;
+    x1 = (xx - win_offset)/(0.8 * SCALE) * local_scale;
+
+
 
     //printf("x1 = %f, y1 = %f ", x1, y1);
 
-    cuda_get_z_intersect_poly(x1, y1, &z, &n_z, disc_zero);
+    cuda_get_z_intersect_poly(x1, y1, &z, n_xyz, disc_zero);
 
 
 /*
@@ -564,7 +676,40 @@ __global__ void compute_colmat(double a, double b, int xmax, int ymax,
 */
 
 
-	n = (z > M_INF) ? n_z : 0;
+
+    // n is cos(i) for light incident along z axis from infinity
+	n = (z > M_INF) ? n_xyz[2] : 0;
+
+	double Lin[3] = {0,0,1};
+
+	double Lin_p[3];
+
+	memcpy(Lin_p, n_xyz, sizeof(Lin_p));
+
+	cuda_skalmult_3(2 * cuda_skalp_3(Lin, n_xyz), Lin_p);
+
+	double Lout[3];
+
+	cuda_vecsub_3(Lout, Lin_p, Lin);
+
+	double zsf = cuda_zscale_factor(z);
+
+	double x11 = x1 * zsf;
+	double y11 = y1 * zsf;
+
+	double Peye[3] = {0, 0, zeye_global};
+
+	double Psurf[3] = {x11, y11, z};
+
+	double Pvec[3];
+
+	cuda_vecsub_3(Pvec, Peye, Psurf);
+
+	cuda_norml_3(Pvec);
+
+	double coss = cuda_skalp_3(Pvec, Lout);
+
+	assert(fabs(coss) <= 1.0);
 
 	if (z > M_INF) {
 		color_red = 0.0;
@@ -572,17 +717,19 @@ __global__ void compute_colmat(double a, double b, int xmax, int ymax,
 		color_blue = 0.0;
 
 		if (n < 0) {
-			color_red = -n/2;
+			color_red = -n/2 + 0.1;
 			color_green = 0;
 			color_blue = 0.0;
 		} else if (n >= 0) {
-			color_green = n/2;
+			color_green = n/2 + 0.1;
 			color_red = 0;
 			color_blue = 0.0;
 		}
 
-		phong_kernel = 2 * n * n - 1;
-		spec_coef = 0.3 * pow(phong_kernel, phong_exponent);
+		//phong_kernel = 2 * n * n - 1;
+		//spec_coef = 0.3 * pow(phong_kernel, phong_exponent);
+
+		spec_coef = coss > 0 ? 0.3 * pow(coss, phong_exponent) : 0.0;
 
 		color_red += spec_coef;
 		color_green += spec_coef ;
@@ -685,7 +832,7 @@ void gpu_compute_colmat(double a, double b, int xmax, int ymax, const cudaPoly3 
 	compute_colmat<<<grids, threads>>>(a, b, xmax, ymax, euler_phi, euler_theta, euler_psi,
 			colmat_r_d, colmat_g_d, colmat_b_d);
 
-	cout << "computation done." << endl;
+	cout << "gpu computation done." << endl;
 
 
 	CCE(cudaMemcpy(colmat_r, colmat_r_d, N * sizeof(int), cudaMemcpyDeviceToHost));

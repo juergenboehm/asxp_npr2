@@ -75,7 +75,7 @@ LIBS += -L/home/juergen/projects/asxp_npr2/cuda/lib -L/usr/local/cuda/lib64 -L/u
 #QMAKE_CXXFLAGS +=/usr/include/glib-2.0/ -DBOOST_DISABLE_ASSERTS
 #QMAKE_CXXFLAGS_RELEASE -= -g
 QMAKE_CXXFLAGS += -frounding-math -O3
-QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE -= -O3
 QMAKE_CXXFLAGS_RELEASE -= -g
 QMAKE_CXXFLAGS += -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ -I/usr/local/include
 
