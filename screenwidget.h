@@ -68,10 +68,11 @@ public:
 
 
     double scale;
-};
+
+
+ };
 
 const int gl_win_size = 800;
-
 
 
 #endif

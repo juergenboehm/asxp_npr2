@@ -402,6 +402,7 @@ moc_glwidget.cpp: glwidget.h
 moc_mainwindow.cpp: configfile.h \
 		asxp.h \
 		asxp_arrays.h \
+		screenwidget.h \
 		streamline.h \
 		pointlist.h \
 		mainwindow.h
@@ -479,6 +480,7 @@ main.o: main.cpp mainwindow.h \
 		configfile.h \
 		asxp.h \
 		asxp_arrays.h \
+		screenwidget.h \
 		streamline.h \
 		pointlist.h \
 		roots.h \
@@ -545,6 +547,7 @@ timing.o: timing.cpp timing.h
 
 triangularize.o: triangularize.cpp asxp.h \
 		asxp_arrays.h \
+		screenwidget.h \
 		streamline.h \
 		pointlist.h \
 		global_headers.h \

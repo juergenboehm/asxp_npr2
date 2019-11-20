@@ -1107,8 +1107,8 @@ void PaintHelper::compute_colmat(double a, double b, int xmax, int ymax)
 	init_f3_diff(f3);
 
 #ifdef RANDOM_COLMAT
-	for (x = 0; x < gl_win_size; ++x) {
-		for( y = 0; y < gl_win_size; ++y) {
+	for (x = 0; x < ScreenWidget::gl_win_size; ++x) {
+		for( y = 0; y < ScreenWidget::gl_win_size; ++y) {
 			mref(colmat_r, x, y) = RAND_COL;
 			mref(colmat_g, x, y) = RAND_COL;
 			mref(colmat_b, x, y) = RAND_COL;
@@ -1283,7 +1283,6 @@ void PaintHelper::compute_colmat_gpu(double a, double b, int xmax, int ymax)
 }
 
 
-int data[gl_win_size * gl_win_size * sizeof(int)];
 
 // (x, y) raster coordinates
 
@@ -1440,6 +1439,210 @@ void PaintHelper::compute_streamfield(int xmax, int ymax)
 
 }
 
+
+int data[gl_win_size * gl_win_size * sizeof(int)];
+
+
+void PaintHelper::paint_fullplot12(QPainter* painter) {
+
+	switch (streamLineColor) {
+	case 0:
+		painter->setPen(QPen(QColor(0, 0, 0)));
+		break;
+	case 1:
+		painter->setPen(QPen(Qt::red));
+		break;
+	default:
+		painter->setPen(QPen(Qt::blue));
+		break;
+	}
+	// dummy while, only for break
+	Streamplot* full_plot_arr[2];
+
+	full_plot_arr[0] = full_plot1;
+	full_plot_arr[1] = full_plot2;
+
+	for (int ifpa = 0; ifpa < 2; ++ifpa) {
+
+		Streamplot* full_plot = full_plot_arr[ifpa];
+
+		if (full_plot == 0) {
+			continue;
+		}
+
+		cout << "no of streamlines = " << full_plot->streaml_res.size() << endl;
+		// cin.get();
+
+		Point2DList fringe_d = full_plot->debug_points;
+
+		for (Point2DListIterator pit = fringe_d.begin(); pit != fringe_d.end();
+				++pit) {
+			painter->drawPoint(pit->x, pit->y);
+		}
+
+		for (list<Streamline>::iterator psl = full_plot->streaml_res.begin();
+				psl != full_plot->streaml_res.end(); ++psl) {
+
+			Point2DList& line_samples(psl->line_samples);
+			Point2DListIterator pit = line_samples.begin();
+
+			cout << "Anfang size = " << line_samples.size() << endl;
+			cout << endl << "Ende" << endl;
+
+			// line_samples contains screen coordinates
+
+			pit = line_samples.begin();
+
+			double x0 = pit->x;
+			double y0 = pit->y;
+
+			++pit;
+
+			while (pit != line_samples.end()) {
+
+				double x1 = pit->x;
+				double y1 = pit->y;
+
+				++pit;
+
+				painter->drawLine(x0, y0, x1, y1);
+
+				x0 = x1;
+				y0 = y1;
+			}
+		}
+
+		cout << "no of streamlines = " << full_plot->streaml_res.size() << endl;
+	}
+}
+
+void PaintHelper::paint_display_crossfield(int xmax, int ymax, QPainter* painter) {
+
+	for (int x = 0; x < xmax; ++x) {
+		for (int y = 0; y < ymax; ++y) {
+
+			if (z_buf[x][y] == M_INF) {
+				continue;
+			}
+
+			if (x % 16 != 0 || y % 16 != 0) {
+				continue;
+			}
+
+			const double c = 7;
+
+			double v1x = c * v1_buf[x][y][0];
+			double v1y = c * v1_buf[x][y][1];
+
+			double v2x = c * v2_buf[x][y][0];
+			double v2y = c * v2_buf[x][y][1];
+
+			painter->setPen(QPen(Qt::blue));
+
+			painter->drawLine(x, y, x + v1x, y + v1y);
+			painter->drawLine(x, y, x - v1x, y - v1y);
+
+			painter->setPen(QPen(Qt::green));
+
+			painter->drawLine(x, y, x + v2x, y + v2y);
+			painter->drawLine(x, y, x - v2x, y - v2y);
+
+		}
+	}
+}
+
+void PaintHelper::paint_from_colmat(QPainter* painter, int x, int y, int xmax, int ymax, double divider) {
+
+	Timing time0;
+	time0.start();
+
+	int stride = gl_win_size / divider;
+
+	for (x = 0; x < xmax; ++x) {
+
+		for (y = 0; y < ymax; ++y) {
+
+			int col_red = mref(colmat_r, x, y);
+			int col_green = mref(colmat_g, x, y);
+			int col_blue = mref(colmat_b, x, y);
+			data[y * stride + x] = (255 << 24) + (col_red << 16)
+					+ (col_green << 8) + col_blue;
+		}
+	}
+
+
+	time0.stop();
+
+	cout << "time to copy = " << time0.elapsed() << endl;
+
+	int im_size = gl_win_size / divider;
+
+	QImage qimage((uchar*) (data), im_size, im_size, QImage::Format_ARGB32);
+
+	painter->drawImage(0, 0, qimage);
+}
+
+void PaintHelper::paint_silhouette_line(QPainter* painter, int xmax, int ymax) {
+
+	painter->fillRect(0, 0, xmax, ymax, QBrush(QColor(255, 255, 255)));
+
+	painter->setPen(QPen(QColor(0, 0, 0)));
+
+	painter->setBrush(QBrush(QColor(0, 0, 0)));
+
+	for (Point2DListIterator it = silhouette_pointl.begin();
+			it != silhouette_pointl.end(); ++it) {
+
+		painter->drawPoint(it->x, it->y);
+
+	}
+}
+
+void PaintHelper::paint_reset_full_plots() {
+
+	if (full_plot1 != 0) {
+		delete full_plot1;
+		full_plot1 = 0;
+	}
+
+	if (full_plot2 != 0) {
+		delete full_plot2;
+		full_plot2 = 0;
+	}
+}
+
+void PaintHelper::paint_compute_colmats(double a, double b, int xmax, int ymax) {
+
+	bool isPrint = (shade_type == -1);
+
+	if (isPrint) {
+		shade_type = 0;
+	}
+
+	Timing time0;
+	time0.start();
+
+	//compute_colmat(a, b, gl_win_size/divider, gl_win_size/divider);
+	if (shade_type != 1) {
+		compute_colmat(a, b, xmax, ymax);
+	} else {
+		compute_colmat_gpu(a, b, xmax, ymax);
+	}
+
+	time0.stop();
+
+	double elapsed = time0.elapsed();
+	cout << "time to render = " << elapsed << endl;
+
+	colmat_valid = true;
+
+	paint_reset_full_plots();
+
+	if (isPrint) {
+		compute_streamfield(xmax, ymax);
+	}
+}
+
 void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 		int mousex, int mousey, double scale_im)
  {
@@ -1495,43 +1698,7 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 
 	if (!colmat_valid) {
 
-		bool isPrint = (shade_type == -1);
-
-		if (isPrint) {
-			shade_type = 0;
-		}
-
-		Timing time0;
-
-		time0.start();
-
-		//compute_colmat(a, b, gl_win_size/divider, gl_win_size/divider);
-		if (shade_type != 1) {
-			compute_colmat(a, b, xmax, ymax);
-		} else {
-			compute_colmat_gpu(a, b, xmax, ymax);
-		}
-
-		time0.stop();
-		double elapsed = time0.elapsed();
-
-		cout << "time to render = " << elapsed << endl;
-		colmat_valid = true;
-
-		if (full_plot1 != 0) {
-			delete full_plot1;
-			full_plot1= 0;
-		}
-
-		if (full_plot2 != 0) {
-			delete full_plot2;
-			full_plot2 = 0;
-		}
-		if (isPrint) {
-
-			compute_streamfield(xmax, ymax);
-
-		}
+		paint_compute_colmats(a, b, xmax, ymax);
 	}
 
     //if (!mouse_moved)
@@ -1561,34 +1728,7 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 
     if (! is_pen_image) {
 
-		Timing time0;
-
-		time0.start();
-
-		int stride = gl_win_size/divider;
-
-		for (x = 0; x < xmax; ++x) {
-			for (y = 0; y < xmax; ++y) {
-
-				int col_red = mref(colmat_r, x, y);
-				int col_green = mref(colmat_g, x, y);
-				int col_blue = mref(colmat_b, x, y);
-
-				data[y * stride + x] = (255 << 24) + (col_red << 16) + (col_green << 8) + col_blue;
-
-			}
-		}
-		time0.stop();
-
-		cout << "time to copy = " << time0.elapsed() << endl;
-
-
-		int im_size = gl_win_size / divider;
-
-		QImage qimage((uchar*)data, im_size, im_size, QImage::Format_ARGB32);
-
-		painter->drawImage(0,0, qimage);
-
+		paint_from_colmat(painter, x, y, xmax, ymax, divider);
     }
 
     if (colmat_valid && displayFlowLines) {
@@ -1597,137 +1737,20 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 
     	if (shade_type == 0) {
 
-    		painter->fillRect(0, 0, xmax, ymax, QBrush(QColor(255,255,255)));
-
-    		painter->setPen(QPen(QColor(0,0,0)));
-    		painter->setBrush(QBrush(QColor(0,0,0)));
-
-			for(Point2DListIterator it = silhouette_pointl.begin(); it != silhouette_pointl.end(); ++it) {
-				painter->drawPoint(it->x, it->y);
-			}
+			paint_silhouette_line(painter, xmax, ymax);
     	}
 
     	// draw cross-field
 
     	if (displayCrossField) {
 
-			for(int x = 0; x < xmax; ++x) {
-				for(int y = 0; y < ymax; ++y) {
-
-					if (z_buf[x][y] == M_INF) {
-						continue;
-					}
-
-					if (x % 16 != 0 || y % 16 != 0) {
-						continue;
-					}
-
-					const double c = 7;
-
-					double v1x = c * v1_buf[x][y][0];
-					double v1y = c * v1_buf[x][y][1];
-
-					double v2x = c * v2_buf[x][y][0];
-					double v2y = c * v2_buf[x][y][1];
-
-					painter->setPen(QPen(Qt::blue));
-
-					painter->drawLine(x, y, x + v1x, y + v1y);
-					painter->drawLine(x, y, x - v1x, y - v1y);
-
-
-					painter->setPen(QPen(Qt::green));
-
-					painter->drawLine(x, y, x + v2x, y + v2y);
-					painter->drawLine(x, y, x - v2x, y - v2y);
-
-
-				}
-			}
+			paint_display_crossfield(xmax, ymax, painter);
     	}
     	// get mouse (x,y) as start-point for integrate flow-line
 
-    	if (full_plot1 &&  full_plot2) {
+    	if (full_plot1 && full_plot2) {
 
-    		switch (streamLineColor) {
-    			case 0: painter->setPen(QPen(QColor(0,0,0)));
-    					break;
-    			case 1:	painter->setPen(QPen(Qt::red));
-    					break;
-    			default: painter->setPen(QPen(Qt::blue));
-    					break;
-    		}
-    	    // dummy while, only for break
-
-    		Streamplot* full_plot_arr[2];
-
-    		full_plot_arr[0] = full_plot1;
-    		full_plot_arr[1] = full_plot2;
-
-    		for(int ifpa = 0; ifpa < 2; ++ifpa) {
-
-    			Streamplot* full_plot = full_plot_arr[ifpa];
-
-    			if (full_plot == 0) {
-    				continue;
-    			}
-
-    			cout << "no of streamlines = " << full_plot->streaml_res.size() << endl;
-    			// cin.get();
-
-    			Point2DList fringe_d = full_plot->debug_points;
-
-    			for(Point2DListIterator pit = fringe_d.begin(); pit != fringe_d.end(); ++pit) {
-    				painter->drawPoint(pit->x, pit->y);
-    			}
-
-    			for(list<Streamline>::iterator psl = full_plot->streaml_res.begin();
-    						psl != full_plot->streaml_res.end(); ++psl) {
-
-    				Point2DList & line_samples(psl->line_samples);
-
-    				Point2DListIterator pit = line_samples.begin();
-
-    				cout << "Anfang size = " << line_samples.size() << endl;
-
-#if 0
-
-    				while (pit != line_samples.end()) {
-    					double x = pit->x;
-    					double y = pit->y;
-    					++pit;
-    					cout << "( " << x << " , " << y << " ) ";
-    				}
-#endif
-    				cout << endl << "Ende" << endl;
-
-    				// line_samples contains screen coordinates
-
-    				pit = line_samples.begin();
-
-    				double x0 = pit->x;
-    				double y0 = pit->y;
-
-    				++pit;
-
-    				while (pit != line_samples.end()) {
-    					double x1 = pit->x;
-    					double y1 = pit->y;
-
-    					++pit;
-
-    					painter->drawLine(x0, y0, x1, y1);
-
-    					x0 = x1;
-    					y0 = y1;
-
-    				}
-
-    			}
-
-    			cout << "no of streamlines = " << full_plot->streaml_res.size() << endl;
-    		}
-
+			paint_fullplot12(painter);
     	}
 
 

@@ -642,7 +642,7 @@ void Window::resetFlowfield()
 
 	}
 
-	screen_main->paint_helper->compute_streamfield(800, 800);
+	screen_main->paint_helper->compute_streamfield(gl_win_size, gl_win_size);
 	screen_main->colmat_valid = true;
 
 	if (do_repaint)

@@ -11,6 +11,8 @@
 #include "asxp.h"
 #include "global_headers.h"
 
+#include "screenwidget.h"
+
 #include "openscad.h"
 #include "gtssurface.h"
 
@@ -924,8 +926,8 @@ void prepare_initial_points(Tr* trx)
 
 	cnt_pre_add_points = 0;
 
-	for(int x = 0; x < 800; x += step ) {
-		for(int y = 0; y < 800; y += step ) {
+	for(int x = 0; x < gl_win_size; x += step ) {
+		for(int y = 0; y < gl_win_size; y += step ) {
 
 			double x1 = xrast_to_x(x);
 			double y1 = yrast_to_y(y);
@@ -939,8 +941,8 @@ void prepare_initial_points(Tr* trx)
 		}
 	}
 
-	for(int z = 0; z < 800; z += step) {
-		for(int x = 0; x < 800; x += step) {
+	for(int z = 0; z < gl_win_size; z += step) {
+		for(int x = 0; x < gl_win_size; x += step) {
 
 			double z1 = xrast_to_x(z);
 			double x1 = xrast_to_x(x);
@@ -962,8 +964,8 @@ void prepare_initial_points(Tr* trx)
 
 	}
 
-	for(int z = 0; z < 800; z += step) {
-		for(int y = 0; y < 800; y += step) {
+	for(int z = 0; z < gl_win_size; z += step) {
+		for(int y = 0; y < gl_win_size; y += step) {
 
 			double z1 = xrast_to_x(z);
 			double y1 = xrast_to_x(y);

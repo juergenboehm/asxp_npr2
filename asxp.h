@@ -8,6 +8,9 @@
 #include <QString>
 
 #include "asxp_arrays.h"
+
+#include "screenwidget.h"
+
 #include "streamline.h"
 
  
@@ -28,8 +31,25 @@ public:
 
     void getImageInfo(int x, int y, double & a, double & b, double & c, double & d );
 
+
+
+    // the paint routines (with part routines factored out)
+
+	void paint_compute_colmats(double a, double b, int xmax, int ymax);
+	void paint_reset_full_plots();
+
+	void paint_fullplot12(QPainter* painter);
+
+    void paint_display_crossfield(int xmax, int ymax, QPainter* painter);
+
+    void paint_from_colmat(QPainter* painter, int x, int y, int xmax, int ymax, double divider);
+
+	void paint_silhouette_line(QPainter* painter, int xmax, int ymax);
+
     void paint(QPainter *painter, QPaintEvent *event, bool mouse_akt,
     			int mousex, int mousey, double scale_im);
+
+
     void compute_colmat(double a, double b, int xmax, int ymax);
 
     void compute_colmat_gpu(double a, double b, int xmax, int ymax);
@@ -38,7 +58,6 @@ public:
     void compute_streamfield_CGAL(int xmax, int ymax);
 
     void init_colmat();
-
 
 public:
     QBrush background;
@@ -75,6 +94,9 @@ public:
     int streamgen_type; // 0 for own 1 for CGAL
 
     QLabel* displayLabel;
+
+
+private:
 };
 
 class FindSilhouette : public PointClassifier {
