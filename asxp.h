@@ -126,40 +126,10 @@ public:
 };
 
 
-int init_f5(QString f5str);
-
-void eval_poly_f3(double x, double y, double z, double & resval);
-
-int eval_poly_poly_f3(double x, double y, double z, double & f, double* fnormal, double* fhessian);
-
-
-int root_list_poly_point_normal(double x, double y, double z,
-		double nx, double ny, double nz, double* root_list, int & root_list_len);
 
 
  
 extern int phong_exponent;
-
-extern Array2d_double* pz_buf;
-extern Array2d_double* pn_buf;
-
-
-extern Array3d_double* pzfull_buf;
-extern Array2d_int* pjsel_buf;
-extern Array2d_int* pnsel_buf;
-
-extern Array2d_bool* pis_silhouette_mat;
-
-extern Array3d_double* pshape_mat_buf;
-
-extern Array3d_double* pvbase_1_buf;
-extern Array3d_double* pvbase_2_buf;
-
-extern Array3d_double* pv1_buf;
-extern Array3d_double* pv2_buf;
-
-extern Array2d_double* pl1_buf;
-extern Array2d_double* pl2_buf;
 
 
 

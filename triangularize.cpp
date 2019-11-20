@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "asxp.h"
+#include "procpoly.h"
 #include "global_headers.h"
 
 #include "screenwidget.h"
@@ -407,7 +408,7 @@ FT sphere_function (Point_3 p) {
   const FT c = 1.5;
 
   double resval;
-  eval_poly_f3(x, y, z, resval);
+  pp.eval_poly_f3(x, y, z, resval);
 
   return sign_center * resval;
   //return x*x/a/a + y*y/b/b + z*z/c/c -1;
@@ -544,7 +545,7 @@ void check_surface_distance()
 		int root_list_len;
 		double root_list[21];
 
-		root_list_poly_point_normal(p.x(), p.y(), p.z(), nn.x(), nn.y(), nn.z(),
+		pp.root_list_poly_point_normal(p.x(), p.y(), p.z(), nn.x(), nn.y(), nn.z(),
 				root_list, root_list_len);
 
 		double min_abs = DBL_MAX;
@@ -650,7 +651,7 @@ void check_surface_distance_trisurf(TriSurface & trisurf)
 		int root_list_len;
 		double root_list[21];
 
-		root_list_poly_point_normal(p.x(), p.y(), p.z(), nn.x(), nn.y(), nn.z(),
+		pp.root_list_poly_point_normal(p.x(), p.y(), p.z(), nn.x(), nn.y(), nn.z(),
 				root_list, root_list_len);
 
 		double min_abs = DBL_MAX;
@@ -748,7 +749,7 @@ void compute_normals(C2t3* c2t3x)
 			double root_list[21];
 			int root_list_len;
 
-			root_list_poly_point_normal(p.x(), p.y(), p.z(), n.x(), n.y(),
+			pp.root_list_poly_point_normal(p.x(), p.y(), p.z(), n.x(), n.y(),
 					n.z(), root_list, root_list_len);
 
 			double min_abs = DBL_MAX;
@@ -824,7 +825,7 @@ void compute_normals_trisurf(TriSurface & trisurf)
 			double root_list[21];
 			int root_list_len;
 
-			root_list_poly_point_normal(p.x(), p.y(), p.z(), n.x(), n.y(),
+			pp.root_list_poly_point_normal(p.x(), p.y(), p.z(), n.x(), n.y(),
 					n.z(), root_list, root_list_len);
 
 			double min_abs = DBL_MAX;
@@ -907,7 +908,7 @@ void try_add_point(Tr* trx, double x1, double y1, double z1)
 	double fnormal[3];
 	double fhessian[9];
 
-	eval_poly_poly_f3(x1, y1, z1, fval, fnormal, fhessian);
+	pp.eval_poly_poly_f3(x1, y1, z1, fval, fnormal, fhessian);
 
 	double nnorm = fnormal[0] * fnormal[0] + fnormal[1] * fnormal[1] + fnormal[2] * fnormal[2];
 
@@ -932,9 +933,9 @@ void prepare_initial_points(Tr* trx)
 			double x1 = xrast_to_x(x);
 			double y1 = yrast_to_y(y);
 
-			for(int i = 0; i < (*pnsel_buf)[x][y]; ++i) {
+			for(int i = 0; i < (*pp.pnsel_buf)[x][y]; ++i) {
 
-				double z1 = (*pzfull_buf)[x][y][i];
+				double z1 = (*pp.pzfull_buf)[x][y][i];
 
 				try_add_point(trx, x1, y1, z1);
 			}
@@ -950,7 +951,7 @@ void prepare_initial_points(Tr* trx)
 			double root_list[root_list_len_max];
 			int root_list_len;
 
-			root_list_poly_point_normal(x1, 0, z1, 0, 1, 0, root_list, root_list_len);
+			pp.root_list_poly_point_normal(x1, 0, z1, 0, 1, 0, root_list, root_list_len);
 
 			for(int i = 0; i < root_list_len; ++i) {
 				double y1 = root_list[i];
@@ -973,7 +974,7 @@ void prepare_initial_points(Tr* trx)
 			double root_list[root_list_len_max];
 			int root_list_len;
 
-			root_list_poly_point_normal(0, y1, z1, 1, 0, 0, root_list, root_list_len);
+			pp.root_list_poly_point_normal(0, y1, z1, 1, 0, 0, root_list, root_list_len);
 
 			for(int i = 0; i < root_list_len; ++i) {
 				double x1 = root_list[i];

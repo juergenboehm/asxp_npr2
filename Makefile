@@ -68,7 +68,8 @@ SOURCES       = asxp.cpp \
 		streamplot.cpp \
 		tests.cpp \
 		timing.cpp \
-		triangularize.cpp moc_glwidget.cpp \
+		triangularize.cpp \
+		procpoly.cpp moc_glwidget.cpp \
 		moc_mainwindow.cpp \
 		moc_screenwidget.cpp \
 		moc_sliders.cpp
@@ -93,6 +94,7 @@ OBJECTS       = asxp.o \
 		tests.o \
 		timing.o \
 		triangularize.o \
+		procpoly.o \
 		moc_glwidget.o \
 		moc_mainwindow.o \
 		moc_screenwidget.o \
@@ -175,7 +177,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		streamplot.h \
 		tests.h \
 		timing.h \
-		triangularize.h asxp.cpp \
+		triangularize.h \
+		procpoly.h asxp.cpp \
 		clipper.cpp \
 		configfile.cpp \
 		eigen.cpp \
@@ -195,7 +198,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		streamplot.cpp \
 		tests.cpp \
 		timing.cpp \
-		triangularize.cpp
+		triangularize.cpp \
+		procpoly.cpp
 QMAKE_TARGET  = asxp
 DESTDIR       = #avoid trailing-slash linebreak
 TARGET        = asxp
@@ -369,8 +373,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents asxp.h asxp_arrays.h clipper.hpp configfile.h eigen.h global_headers.h glwidget.h gtssurface.h mainwindow.h openscad.h parser.h pointlist.h pointraster.h poly.h roots.h screenwidget.h sliders.h streamline.h streamplot.h tests.h timing.h triangularize.h $(DISTDIR)/
-	$(COPY_FILE) --parents asxp.cpp clipper.cpp configfile.cpp eigen.cpp glwidget.cpp gtssurface.cpp mainwindow.cpp main.cpp openscad.cpp parser.cpp pointlist.cpp pointraster.cpp poly.cpp roots.cpp screenwidget.cpp sliders.cpp streamline.cpp streamplot.cpp tests.cpp timing.cpp triangularize.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents asxp.h asxp_arrays.h clipper.hpp configfile.h eigen.h global_headers.h glwidget.h gtssurface.h mainwindow.h openscad.h parser.h pointlist.h pointraster.h poly.h roots.h screenwidget.h sliders.h streamline.h streamplot.h tests.h timing.h triangularize.h procpoly.h $(DISTDIR)/
+	$(COPY_FILE) --parents asxp.cpp clipper.cpp configfile.cpp eigen.cpp glwidget.cpp gtssurface.cpp mainwindow.cpp main.cpp openscad.cpp parser.cpp pointlist.cpp pointraster.cpp poly.cpp roots.cpp screenwidget.cpp sliders.cpp streamline.cpp streamplot.cpp tests.cpp timing.cpp triangularize.cpp procpoly.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -555,6 +559,10 @@ triangularize.o: triangularize.cpp asxp.h \
 		gtssurface.h \
 		triangularize.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o triangularize.o triangularize.cpp
+
+procpoly.o: procpoly.cpp asxp_arrays.h \
+		procpoly.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o procpoly.o procpoly.cpp
 
 moc_glwidget.o: moc_glwidget.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_glwidget.o moc_glwidget.cpp

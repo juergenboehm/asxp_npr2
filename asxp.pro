@@ -24,6 +24,7 @@ HEADERS += streamplot.h
 HEADERS += tests.h
 HEADERS += timing.h
 HEADERS += triangularize.h
+HEADERS += procpoly.h
 
 SOURCES += asxp.cpp
 SOURCES += clipper.cpp
@@ -46,6 +47,8 @@ SOURCES += streamplot.cpp
 SOURCES += tests.cpp
 SOURCES += timing.cpp
 SOURCES += triangularize.cpp
+SOURCES += procpoly.cpp
+
 
 TARGET = asxp
 

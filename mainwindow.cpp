@@ -34,6 +34,7 @@
 #include "glwidget.h"
 #include "openscad.h"
 #include "asxp.h"
+#include "procpoly.h"
 
 #include "triangularize.h"
 #include "gtssurface.h"
@@ -725,7 +726,7 @@ void Window::selectSurf(int sel_ind)
 		++cnt;
 	}
 
-	init_f5(f5str);
+	pp.init_f5(f5str);
 
 	screen_main->colmat_valid = false;
 	screen_main->refresh();
@@ -846,7 +847,7 @@ void Window::doLineInput()
 
 		}
 
-		init_f5(f5str);
+		pp.init_f5(f5str);
 
 		screen_main->colmat_valid = false;
 		screen_main->refresh();
