@@ -69,7 +69,7 @@ LIBS += -lmpfr
 
 LIBS += -lgts -lglib-2.0 -lm
 
-LIBS += -L/home/juergen/projects/asxp_npr2/cuda/lib -L/usr/local/cuda/lib64 -L/usr/lib -lasxp -lcuda -lcudart -lcudadevrt
+LIBS += -L./cuda/lib -L/usr/local/cuda/lib64 -L/usr/lib -lasxp -lcuda -lcudart -lcudadevrt
 
 
 

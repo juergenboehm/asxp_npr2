@@ -36,7 +36,7 @@ DISTNAME      = asxp1.0.0
 DISTDIR = /home/juergen/projects/asxp_npr2/.tmp/asxp1.0.0
 LINK          = g++
 LFLAGS        = -m64
-LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/lib -lboost_system -lboost_thread -lGLU -lCGAL -lCGAL_Core -lgmp -lmpfr -lgts -lglib-2.0 -lm -L/home/juergen/projects/asxp_npr2/cuda/lib -L/usr/local/cuda/lib64 -L/usr/lib -lasxp -lcuda -lcudart -lcudadevrt -lQt5OpenGL -lQt5Svg -lQt5PrintSupport -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) -L/usr/X11R6/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/lib -lboost_system -lboost_thread -lGLU -lCGAL -lCGAL_Core -lgmp -lmpfr -lgts -lglib-2.0 -lm -L./cuda/lib -L/usr/local/cuda/lib64 -L/usr/lib -lasxp -lcuda -lcudart -lcudadevrt -lQt5OpenGL -lQt5Svg -lQt5PrintSupport -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -438,9 +438,10 @@ asxp.o: asxp.cpp timing.h \
 		parser.h \
 		roots.h \
 		screenwidget.h \
-		asxp.h \
+		procpoly.h \
 		streamline.h \
 		pointlist.h \
+		asxp.h \
 		eigen.h \
 		streamplot.h \
 		pointraster.h \
@@ -475,6 +476,8 @@ mainwindow.o: mainwindow.cpp configfile.h \
 		glwidget.h \
 		openscad.h \
 		asxp.h \
+		procpoly.h \
+		poly.h \
 		triangularize.h \
 		gtssurface.h \
 		mainwindow.h
@@ -554,6 +557,8 @@ triangularize.o: triangularize.cpp asxp.h \
 		screenwidget.h \
 		streamline.h \
 		pointlist.h \
+		procpoly.h \
+		poly.h \
 		global_headers.h \
 		openscad.h \
 		gtssurface.h \
@@ -561,7 +566,14 @@ triangularize.o: triangularize.cpp asxp.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o triangularize.o triangularize.cpp
 
 procpoly.o: procpoly.cpp asxp_arrays.h \
-		procpoly.h
+		eigen.h \
+		roots.h \
+		poly.h \
+		parser.h \
+		screenwidget.h \
+		procpoly.h \
+		streamline.h \
+		pointlist.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o procpoly.o procpoly.cpp
 
 moc_glwidget.o: moc_glwidget.cpp 
