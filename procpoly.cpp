@@ -325,14 +325,12 @@ void m_fold(const double* m_image, const double* m_mask, int n, double &result) 
 #define RAND_COL ((int)(255.0*((float)rand())/RAND_MAX))
 
 
-const int win_size =  gl_win_size;
 const int max_roots = 10;
 
 const int arr_size = 2 * gl_win_size;
 
-ProcPoly pp(arr_size, max_roots);
+ProcPoly pp(arr_size, max_roots, gl_win_size, xrast_to_x, yrast_to_y);
 
-Point2DList silhouette_pointl;
 
 
 
@@ -704,7 +702,7 @@ void ProcPoly::fill_arrays(int xmax, int ymax, int shade_type) {
 
 void ProcPoly::calc_silhouette(int xmax, int ymax, double & k_gauss_min, double & k_gauss_max) {
 
-	double local_scale = gl_win_size/xmax;
+	double local_scale = akt_win_size/xmax;
 	int win_offset = xmax/2;
 
 	UNUSED(local_scale);

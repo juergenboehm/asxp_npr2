@@ -90,7 +90,7 @@ PaintHelper::PaintHelper()
 
     streamLineColor = 0;
 
-    streamgen_type = 0;
+    streamgen_type = 1;
 
     colmat_valid = true;
 
@@ -175,6 +175,8 @@ void shade_color(double nz, double & color_red, double & color_green, double & c
 	}
 
 }
+
+const int win_size =  gl_win_size;
 
 Array2d_double floyd_stein_buf(boost::extents[win_size + 1][win_size + 1]);
 
@@ -782,8 +784,8 @@ void PaintHelper::paint_silhouette_line(QPainter* painter, int xmax, int ymax) {
 
 	painter->setBrush(QBrush(QColor(0, 0, 0)));
 
-	for (Point2DListIterator it = silhouette_pointl.begin();
-			it != silhouette_pointl.end(); ++it) {
+	for (Point2DListIterator it = pp.silhouette_pointl.begin();
+			it != pp.silhouette_pointl.end(); ++it) {
 
 		painter->drawPoint(it->x, it->y);
 

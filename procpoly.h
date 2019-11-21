@@ -15,7 +15,12 @@ class ProcPoly {
 
 public:
 
-	ProcPoly(int arr_size, int max_roots):
+	ProcPoly(int arr_size, int max_roots, int akt_win_sizea, Scale & xrast_to_xa, Scale & yrast_to_ya):
+
+		akt_win_size(akt_win_sizea),
+
+		xrast_to_x(xrast_to_xa),
+		yrast_to_y(yrast_to_ya),
 
 		z_buf(boost::extents[arr_size][arr_size]),
 		n_buf(boost::extents[arr_size][arr_size]),
@@ -139,11 +144,20 @@ public:
 	Array2d_double* pl2_buf;
 
 
+	Point2DList silhouette_pointl;
+
+
+
 
 private:
 
 
 	static const int max_deg = 20;
+
+	Scale & xrast_to_x;
+	Scale & yrast_to_y;
+
+	int akt_win_size;
 
 
 	int get_z_intersect_poly(double x, double y, double  & z, double  & n_z, bool & disc_zero, double* full_z_list,
@@ -192,14 +206,8 @@ private:
 
 extern ProcPoly pp;
 
-extern Scale xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast;
+extern Scale xrast_to_x, yrast_to_y;
 
-
-
-
-extern const int win_size;
-
-extern Point2DList silhouette_pointl;
 
 
 

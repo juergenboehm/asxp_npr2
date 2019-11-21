@@ -130,8 +130,9 @@ Window::Window()
 
     QComboBox *flowstream_meth_box = new QComboBox();
 
-    flowstream_meth_box->addItem(tr("Jobard"));
     flowstream_meth_box->addItem(tr("Mebarki"));
+    flowstream_meth_box->addItem(tr("Jobard"));
+
 
 	connect(flowstream_meth_box, SIGNAL(currentIndexChanged(int)), this, SLOT(flowstreamMeth(int)));
 
@@ -736,9 +737,9 @@ void Window::selectSurf(int sel_ind)
 void Window::flowstreamMeth(int sel_ind)
 {
 	if (sel_ind == 0) {
-		screen_main->paint_helper->streamgen_type = 0;
-	} else if (sel_ind == 1) {
 		screen_main->paint_helper->streamgen_type = 1;
+	} else if (sel_ind == 1) {
+		screen_main->paint_helper->streamgen_type = 0;
 	}
 }
 

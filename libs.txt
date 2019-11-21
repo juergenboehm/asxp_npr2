@@ -25,7 +25,7 @@ while read in; do dpkg -S "$in"; done < libnames.txt
 
 or
 
-while read in; do apt-file find "$in"; done < libnames.txt
+while read in; do apt-file find "$in"; done < libnames1.txt
 
 The last command does not only look in the locally installed packages, but also
 in the remotely accessible/downloadable ones. 

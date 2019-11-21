@@ -349,11 +349,11 @@ void Streamplot::compute_stream_field_CGAL() {
 		fname = "intpoints2.dat";
 	}
 
-	ofstream intpointss(fname.toLatin1().data());
+	//ofstream intpointss(fname.toLatin1().data());
 
 	while (sit != sit_end) {
 
-		intpointss << "Streamline cnt = " << cnt << endl;
+		//intpointss << "Streamline cnt = " << cnt << endl;
 
 		// only dummy, no integration, just fill csl.line_samples
 		Streamline csl;
@@ -372,7 +372,7 @@ void Streamplot::compute_stream_field_CGAL() {
 		xnew_i = int(xnew/scale_i);
 		ynew_i = int(ynew/scale_i);
 
-		intpointss << xnew << " " << ynew << "\n";
+		//intpointss << xnew << " " << ynew << "\n";
 
 		csl.line_samples.push_back(Point2D(xnew_i, ynew_i));
 
@@ -392,7 +392,7 @@ void Streamplot::compute_stream_field_CGAL() {
 			xnew_i = int(xnew/scale_i);
 			ynew_i = int(ynew/scale_i);
 
-			intpointss << xnew << " " << ynew << "\n";
+			///intpointss << xnew << " " << ynew << "\n";
 
 			if (xnew_i != xold_i || ynew_i != yold_i) {
 
