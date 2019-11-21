@@ -34,27 +34,75 @@
 #define POLY_DEG1 (POLY_DEG+1)
 
 
-Scale xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast;
-
 
 //Poly5 f5;
 //Poly3 f3;
-Poly3 f3x, f3y, f3z;
 
-Poly3 f3xx, f3xy, f3xz, f3yy, f3yz, f3zz;
+// stand alone
+void m_rot_z(double a, double * mat)
+{
+	const int ndim = 3;
+	for(int i = 0; i < ndim; ++i) {
+		for(int j = 0; j < ndim; ++j) {
+			mat[3*i+j] = 0;
+		}
+	}
+	mat[0] = cos(a);
+	mat[1] = sin(a);
+	mat[3] = -sin(a);
+	mat[4] = cos(a);
+	mat[8] = 1;
+}
 
-double m_euler[3 * 3];
-double m_euler_transpose[3 * 3];
+// stand alone
+void m_rot_x(double a, double * mat)
+{
+	const int ndim = 3;
+	for(int i = 0; i < ndim; ++i) {
+		for(int j = 0; j < ndim; ++j) {
+			mat[3*i+j] = 0;
+		}
+	}
+	mat[4] = cos(a);
+	mat[5] = sin(a);
+	mat[7] = -sin(a);
+	mat[8] = cos(a);
+	mat[0] = 1;
 
-const int max_deg = 20;
+}
 
-int akt_deg_global;
 
-double akt_xbase[max_deg+1] = { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 };
 
-double lagrange_basis[max_deg+1][max_deg+1];
+// private functions of ProcPoly
 
-void lb_poly_mult(int deg, double * coefs, double a)
+void ProcPoly::normalize_poly_coefs(double* poly_coefs, int akt_deg, int & deg_new)
+{
+
+	// in poly_coefs poly_coefs[0] is coefficient in term of highest degree
+
+	int deg;
+	int i_tst;
+
+	for(i_tst = 0; i_tst < akt_deg; ++i_tst) {
+		if (fabs(poly_coefs[i_tst]) > 1e-8)
+			break;
+	}
+
+	deg = akt_deg - i_tst;
+
+	deg_new = deg;
+
+	if (deg < akt_deg) {
+		for(int i = 0; i < max_deg - (akt_deg - deg); ++i ) {
+			poly_coefs[i] = poly_coefs[i + akt_deg - deg];
+		}
+	}
+
+}
+
+
+
+void ProcPoly::lb_poly_mult(int deg, double * coefs, double a)
 {
 	// multiply coefs poly coefs[0] * t^deg + ... with (t + a)
 	coefs[deg+1] = 0;
@@ -63,7 +111,7 @@ void lb_poly_mult(int deg, double * coefs, double a)
 	}
 }
 
-void lb_poly_scal_mult(int deg, double * coefs, double a)
+void ProcPoly::lb_poly_scal_mult(int deg, double * coefs, double a)
 {
 	for(int i = 0; i <= deg; ++i) {
 		coefs[i] *= a;
@@ -71,7 +119,7 @@ void lb_poly_scal_mult(int deg, double * coefs, double a)
 }
 
 
-void lb_gen_lagrange_basis(int deg, double* xbase, double lagr_basis[][max_deg + 1])
+void ProcPoly::lb_gen_lagrange_basis(int deg, double* xbase, double lagr_basis[][max_deg + 1])
 {
 	// xbase stützstellen, deg+1 Stück
 
@@ -98,40 +146,7 @@ void lb_gen_lagrange_basis(int deg, double* xbase, double lagr_basis[][max_deg +
 }
 
 
-
-void m_rot_z(double a, double * mat)
-{
-	const int ndim = 3;
-	for(int i = 0; i < ndim; ++i) {
-		for(int j = 0; j < ndim; ++j) {
-			mat[3*i+j] = 0;
-		}
-	}
-	mat[0] = cos(a);
-	mat[1] = sin(a);
-	mat[3] = -sin(a);
-	mat[4] = cos(a);
-	mat[8] = 1;
-}
-
-void m_rot_x(double a, double * mat)
-{
-	const int ndim = 3;
-	for(int i = 0; i < ndim; ++i) {
-		for(int j = 0; j < ndim; ++j) {
-			mat[3*i+j] = 0;
-		}
-	}
-	mat[4] = cos(a);
-	mat[5] = sin(a);
-	mat[7] = -sin(a);
-	mat[8] = cos(a);
-	mat[0] = 1;
-
-}
-
-
-double eval_f3_mat(Poly3 & f3, double *sl)
+double ProcPoly::eval_f3_mat(Poly3 & f3, double *sl)
 {
 	double sl1[3];
 	m_mult_mat_vec(sl, m_euler, sl1);
@@ -143,8 +158,7 @@ double eval_f3_mat(Poly3 & f3, double *sl)
 }
 
 
-
-int eval_poly_poly(Poly3 & f3,
+int ProcPoly::eval_poly_poly(Poly3 & f3,
 		double x, double y, double z, double & f, double* fnormal, double* fhessian, bool only_normal)
 {
 
@@ -225,8 +239,7 @@ int eval_poly_poly(Poly3 & f3,
 
 
 
-
-int eval_coefs_poly(Poly3 & f3, double x, double y, double* coefs_lis)
+int ProcPoly::eval_coefs_poly(Poly3 & f3, double x, double y, double* coefs_lis)
 {
 	// hier die Lagrangeinterpolation einfügen
 	// z wird nacheinander z0, z1, z2,....zn gesetzt mit n = deg f3
@@ -253,7 +266,7 @@ int eval_coefs_poly(Poly3 & f3, double x, double y, double* coefs_lis)
 	return 0;
 }
 
-int eval_coefs_poly_point_normal(Poly3 & f3, double x, double y, double z,
+int ProcPoly::eval_coefs_poly_point_normal(Poly3 & f3, double x, double y, double z,
 			double nx, double ny, double nz, double* coefs_lis)
 {
 	// hier die Lagrangeinterpolation einfügen
@@ -281,60 +294,8 @@ int eval_coefs_poly_point_normal(Poly3 & f3, double x, double y, double z,
 
 }
 
-void normalize_poly_coefs(double* poly_coefs, int akt_deg, int & deg_new)
-{
-
-	// in poly_coefs poly_coefs[0] is coefficient in term of highest degree
-
-	int deg;
-	int i_tst;
-
-	for(i_tst = 0; i_tst < akt_deg; ++i_tst) {
-		if (fabs(poly_coefs[i_tst]) > 1e-8)
-			break;
-	}
-
-	deg = akt_deg - i_tst;
-
-	deg_new = deg;
-
-	if (deg < akt_deg) {
-		for(int i = 0; i < max_deg - (akt_deg - deg); ++i ) {
-			poly_coefs[i] = poly_coefs[i + akt_deg - deg];
-		}
-	}
-
-}
 
 
-
-
-int rotate_mat(double phi, double theta, double psi)
-{
-	const int ndim = 3;
-	const int nsize = ndim * ndim;
-
-	double m_z_phi[nsize];
-	double m_x_theta[nsize];
-	double m_z_psi[nsize];
-
-	double m_aux[nsize];
-
-	m_rot_z(phi, m_z_phi);
-	m_rot_x(theta, m_x_theta);
-	m_rot_z(psi, m_z_psi);
-
-	// note that f(m_euler x) = 0
-	// means f(x) = 0 is turned by m_euler^{-1}
-
-	m_mult(m_x_theta, m_z_phi, m_aux);
-	m_mult(m_z_psi, m_aux, m_euler);
-
-	m_transpose_mat(m_euler, m_euler_transpose);
-
-	return 0;
-
-}
 
 
 
@@ -375,6 +336,36 @@ Point2DList silhouette_pointl;
 
 
 
+// public interface of ProcPoly
+
+
+// can not stand alone uses m_euler
+int ProcPoly::rotate_mat(double phi, double theta, double psi)
+{
+	const int ndim = 3;
+	const int nsize = ndim * ndim;
+
+	double m_z_phi[nsize];
+	double m_x_theta[nsize];
+	double m_z_psi[nsize];
+
+	double m_aux[nsize];
+
+	m_rot_z(phi, m_z_phi);
+	m_rot_x(theta, m_x_theta);
+	m_rot_z(psi, m_z_psi);
+
+	// note that f(m_euler x) = 0
+	// means f(x) = 0 is turned by m_euler^{-1}
+
+	m_mult(m_x_theta, m_z_phi, m_aux);
+	m_mult(m_z_psi, m_aux, m_euler);
+
+	m_transpose_mat(m_euler, m_euler_transpose);
+
+	return 0;
+
+}
 
 
 
@@ -472,6 +463,7 @@ int ProcPoly::root_list_poly_point_normal(double x, double y, double z,
 
 }
 
+// is private function
 int ProcPoly::get_z_intersect_poly(double x, double y, double  & z, double  & n_z, bool & disc_zero, double* full_z_list,
 		double* shape_mat, double* base_v1, double* base_v2, double & l1, double & l2, int & jsel, int & nsel,
 		int shade_type)

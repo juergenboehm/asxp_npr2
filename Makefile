@@ -405,9 +405,9 @@ moc_glwidget.cpp: glwidget.h
 
 moc_mainwindow.cpp: configfile.h \
 		asxp.h \
-		asxp_arrays.h \
 		screenwidget.h \
 		streamline.h \
+		asxp_arrays.h \
 		pointlist.h \
 		mainwindow.h
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/home/juergen/projects/asxp_npr2 -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtOpenGL -I/usr/include/x86_64-linux-gnu/qt5/QtSvg -I/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/5 -I/usr/include/x86_64-linux-gnu/c++/5 -I/usr/include/c++/5/backward -I/usr/lib/gcc/x86_64-linux-gnu/5/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include mainwindow.h -o moc_mainwindow.cpp
@@ -486,9 +486,9 @@ mainwindow.o: mainwindow.cpp configfile.h \
 main.o: main.cpp mainwindow.h \
 		configfile.h \
 		asxp.h \
-		asxp_arrays.h \
 		screenwidget.h \
 		streamline.h \
+		asxp_arrays.h \
 		pointlist.h \
 		roots.h \
 		eigen.h \
@@ -520,8 +520,8 @@ roots.o: roots.cpp roots.h
 
 screenwidget.o: screenwidget.cpp screenwidget.h \
 		asxp.h \
-		asxp_arrays.h \
 		streamline.h \
+		asxp_arrays.h \
 		pointlist.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o screenwidget.o screenwidget.cpp
 
@@ -553,9 +553,9 @@ timing.o: timing.cpp timing.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o timing.o timing.cpp
 
 triangularize.o: triangularize.cpp asxp.h \
-		asxp_arrays.h \
 		screenwidget.h \
 		streamline.h \
+		asxp_arrays.h \
 		pointlist.h \
 		procpoly.h \
 		poly.h \

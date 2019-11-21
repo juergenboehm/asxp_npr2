@@ -37,6 +37,9 @@
 
 
 int phong_exponent;
+
+Scale xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast;
+
  
 
 #define Q_SQ(x) ((x) * (x))
@@ -289,7 +292,7 @@ void PaintHelper::compute_colmat(double a, double b, int xmax, int ymax)
 	parm[1] = b;
 
     pp.eval_parms_poly(pp.f5, pp.f3, parm);
-    rotate_mat(euler_phi, euler_theta, euler_psi);
+    pp.rotate_mat(euler_phi, euler_theta, euler_psi);
 
 	pp.init_f3_diff(pp.f3);
 

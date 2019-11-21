@@ -7,8 +7,6 @@
 #include <QPen>
 #include <QString>
 
-#include "asxp_arrays.h"
-
 #include "screenwidget.h"
 
 #include "streamline.h"

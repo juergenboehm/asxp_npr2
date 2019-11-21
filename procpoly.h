@@ -65,6 +65,8 @@ public:
 
 	{};
 
+	int rotate_mat(double phi, double theta, double psi);
+
 	int eval_parms_poly(Poly5 poly_in, Poly3 & poly_out, double *parm);
 
 
@@ -140,15 +142,52 @@ public:
 
 private:
 
+
+	static const int max_deg = 20;
+
+
 	int get_z_intersect_poly(double x, double y, double  & z, double  & n_z, bool & disc_zero, double* full_z_list,
 			double* shape_mat, double* base_v1, double* base_v2, double & l1, double & l2, int & jsel, int & nsel,
 			int shade_type);
+
+	void lb_poly_mult(int deg, double * coefs, double a);
+
+	void lb_poly_scal_mult(int deg, double * coefs, double a);
+
+	void lb_gen_lagrange_basis(int deg, double* xbase, double lagr_basis[][max_deg + 1]);
+
+	double eval_f3_mat(Poly3 & f3, double *sl);
+
+	int eval_poly_poly(Poly3 & f3,
+			double x, double y, double z, double & f, double* fnormal, double* fhessian, bool only_normal);
+
+	int eval_coefs_poly(Poly3 & f3, double x, double y, double* coefs_lis);
+
+	int eval_coefs_poly_point_normal(Poly3 & f3, double x, double y, double z,
+				double nx, double ny, double nz, double* coefs_lis);
+
+
+	void normalize_poly_coefs(double* poly_coefs, int akt_deg, int & deg_new);
+
+
+	Poly3 f3x, f3y, f3z;
+
+	Poly3 f3xx, f3xy, f3xz, f3yy, f3yz, f3zz;
+
+	double m_euler[3 * 3];
+	double m_euler_transpose[3 * 3];
+
+	int akt_deg_global;
+
+	double akt_xbase[max_deg+1] = { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 };
+
+	double lagrange_basis[max_deg+1][max_deg+1];
+
 
 
 
 };
 
-int rotate_mat(double phi, double theta, double psi);
 
 
 extern ProcPoly pp;
