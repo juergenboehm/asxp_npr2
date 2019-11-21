@@ -95,6 +95,11 @@ public:
 
 
 private:
+
+    int* pdata;
+
+    //[gl_win_size * gl_win_size];
+
 };
 
 class FindSilhouette : public PointClassifier {

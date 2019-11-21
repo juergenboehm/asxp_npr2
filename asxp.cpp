@@ -93,6 +93,8 @@ PaintHelper::PaintHelper()
     streamgen_type = 0;
 
     colmat_valid = true;
+
+    pdata = new int[gl_win_size * gl_win_size];
 }
 
 void PaintHelper::init_colmat()
@@ -111,6 +113,8 @@ PaintHelper::~PaintHelper()
 	free(colmat_r);
 	free(colmat_g);
 	free(colmat_b);
+
+	free(pdata);
 }
 
 
@@ -630,9 +634,6 @@ void PaintHelper::compute_streamfield(int xmax, int ymax)
 }
 
 
-//int data[gl_win_size * gl_win_size * sizeof(int)];
-int data[gl_win_size * gl_win_size];
-
 
 void PaintHelper::paint_fullplot12(QPainter* painter) {
 
@@ -756,7 +757,7 @@ void PaintHelper::paint_from_colmat(QPainter* painter, int x, int y, int xmax, i
 			int col_red = mref(colmat_r, x, y);
 			int col_green = mref(colmat_g, x, y);
 			int col_blue = mref(colmat_b, x, y);
-			data[y * stride + x] = (255 << 24) + (col_red << 16)
+			pdata[y * stride + x] = (255 << 24) + (col_red << 16)
 					+ (col_green << 8) + col_blue;
 		}
 	}
@@ -768,7 +769,7 @@ void PaintHelper::paint_from_colmat(QPainter* painter, int x, int y, int xmax, i
 
 	int im_size = gl_win_size / divider;
 
-	QImage qimage((uchar*) (data), im_size, im_size, QImage::Format_ARGB32);
+	QImage qimage((uchar*) (pdata), im_size, im_size, QImage::Format_ARGB32);
 
 	painter->drawImage(0, 0, qimage);
 }

@@ -1,0 +1,13 @@
+libboost_system.so*
+libboost_thread.so*
+libGLU.so*
+libCGAL.so*
+libCGAL_Core.so*
+libgmp.so*
+libmpfr.so* 
+libgts.so* 
+libglib-2.0.so* 
+libm.so*
+libcuda.so* 
+libcudart.so* 
+libcudadevrt.so*

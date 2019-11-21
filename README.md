@@ -13,6 +13,14 @@ f(x, y, z, a0, b0) = 0
 ```
 in 3d-space with coordinates x, y, z.
 
+In total it does
+
+- create living views of an algebraic surface under parameter change,
+- produce Floyd-Steinberg dithered grayscale images of surfaces,
+- create images which are cross hatched along the principal directions of curvature,
+- display silhouette images,
+- triangularize surfaces, smoothen and reduce the triangularization,
+- produce STL models ready for 3D printing (with the help of an auxiliary program, *renderstl*).
 
 ### Look at the video
 
@@ -20,11 +28,24 @@ The current version runs with CUDA support and uses the parallel processing powe
 
 [![asxp demo video](https://img.youtube.com/vi/hFiTgNpNDK8/0.jpg)](https://www.youtube.com/watch?v=hFiTgNpNDK8)
 
+### A drawing
+
+This drawing is done with principal curvature crossfield hatch:
+![cross hatch](http://www.aviduratas.de/pictures/grafik/print-01.png)
+
+
 ### Building asxp
 
 #### Introduction
 
 At the moment I give only a sketchy explanation for experts who know how to extract the necessary dependency informations from the makefiles and can change the makefiles accordingly. If you need more detailed information how to build asxp please write me an e-mail.
+
+#### Prerequisites
+
+Generally *asxp* depends on *Qt*, *boost*, *CGAL*, *GNU GTS*, *CUDA*. 
+
+Look at ```libs.txt``` for a way to find the necessary dependencies of *asxp* on an Ubuntu system with ```apt-file```.
+
 
 #### Steps
 
@@ -36,7 +57,7 @@ git clone https://www.github.com/juergenboehm/asxp_npr2.git
 cd asxp_npr2
 ```
 
-Modify paths and variable values in ```make.pro``` and in ```cuda/Makefile``` if necessary.
+Modify paths and variable values in ```asxp.pro``` and in ```cuda/Makefile``` if necessary.
 
 ```
 ./qmakeit

@@ -1,0 +1,249 @@
+A list of packages on my machine and remote where the used libs can be found
+============================================================================
+
+1) The following are the global libs referenced in asxp.pro
+
+libboost_system.so*
+libboost_thread.so*
+libGLU.so*
+libCGAL.so*
+libCGAL_Core.so*
+libgmp.so*
+libmpfr.so* 
+libgts.so* 
+libglib-2.0.so* 
+libm.so*
+libcuda.so* 
+libcudart.so* 
+libcudadevrt.so*
+
+2) Write them into files libnames.txt and libnames1.txt
+
+3) Execute the following
+
+while read in; do dpkg -S "$in"; done < libnames.txt
+
+or
+
+while read in; do apt-file find "$in"; done < libnames.txt
+
+The last command does not only look in the locally installed packages, but also
+in the remotely accessible/downloadable ones. 
+
+4) Get the result: In the first column is the package name on my Ubuntu 16.04 LTS system
+where the lib*so* file is member of. From this info it should be easy to execute
+the necessary 'apt-get install' commands.
+
+HINT: prefer libxxx-dev packages. Installing them will probably draw the necessary non
+dev parts with them.
+
+libboost-system1.58.0:amd64: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.58.0
+nsight-systems-2019.3.7: /opt/nvidia/nsight-systems/2019.3.7/Host-x86_64/libboost_system.so.1.64.0
+libboost-system1.58-dev:amd64: /usr/lib/x86_64-linux-gnu/libboost_system.so
+nsight-systems-2019.3.7: /opt/nvidia/nsight-systems/2019.3.7/Host-x86_64/libboost_thread.so.1.64.0
+libboost-thread1.58-dev:amd64: /usr/lib/x86_64-linux-gnu/libboost_thread.so
+libboost-thread1.58.0:amd64: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.58.0
+libglu1-mesa-dev:amd64: /usr/lib/x86_64-linux-gnu/libGLU.so
+libglu1-mesa:amd64: /usr/lib/x86_64-linux-gnu/libGLU.so.1
+libglu1-mesa:i386: /usr/lib/i386-linux-gnu/libGLU.so.1.3.1
+libglu1-mesa:amd64: /usr/lib/x86_64-linux-gnu/libGLU.so.1.3.1
+libglu1-mesa:i386: /usr/lib/i386-linux-gnu/libGLU.so.1
+libcgal11v5:amd64: /usr/lib/x86_64-linux-gnu/libCGAL.so.11.0.1
+libcgal11v5:amd64: /usr/lib/x86_64-linux-gnu/libCGAL.so.11
+libcgal-dev:amd64: /usr/lib/x86_64-linux-gnu/libCGAL.so
+libcgal11v5:amd64: /usr/lib/x86_64-linux-gnu/libCGAL_Core.so.11.0.1
+libcgal-dev:amd64: /usr/lib/x86_64-linux-gnu/libCGAL_Core.so
+libcgal11v5:amd64: /usr/lib/x86_64-linux-gnu/libCGAL_Core.so.11
+libgmp10:i386: /usr/lib/i386-linux-gnu/libgmp.so.10.3.0
+libssl1.0.0:i386: /usr/lib/i386-linux-gnu/openssl-1.0.0/engines/libgmp.so
+libgmp10:amd64: /usr/lib/x86_64-linux-gnu/libgmp.so.10.3.0
+libgmp10:amd64: /usr/lib/x86_64-linux-gnu/libgmp.so.10
+libssl1.0.0:amd64: /usr/lib/x86_64-linux-gnu/openssl-1.0.0/engines/libgmp.so
+libgmp-dev:amd64: /usr/lib/x86_64-linux-gnu/libgmp.so
+libgmp10:i386: /usr/lib/i386-linux-gnu/libgmp.so.10
+libmpfr4:amd64: /usr/lib/x86_64-linux-gnu/libmpfr.so.4
+libmpfr4:amd64: /usr/lib/x86_64-linux-gnu/libmpfr.so.4.1.4
+libmpfr-dev:amd64: /usr/lib/x86_64-linux-gnu/libmpfr.so
+libgts-dev:amd64: /usr/lib/x86_64-linux-gnu/libgts.so
+libglib2.0-0:amd64: /lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.2
+libglib2.0-0:i386: /lib/i386-linux-gnu/libglib-2.0.so.0.4800.2
+libglib2.0-dev: /usr/lib/x86_64-linux-gnu/libglib-2.0.so
+libglib2.0-0:amd64: /lib/x86_64-linux-gnu/libglib-2.0.so.0
+libglib2.0-0:i386: /lib/i386-linux-gnu/libglib-2.0.so.0
+libc6-i386: /lib32/libm.so.6
+libc6:amd64: /lib/x86_64-linux-gnu/libm.so.6
+libc6-dev:amd64: /usr/lib/x86_64-linux-gnu/libm.so
+libc6:i386: /lib/i386-linux-gnu/libm.so.6
+libcuda1-418: /usr/lib/i386-linux-gnu/libcuda.so
+cuda-driver-dev-10-1: /usr/local/cuda-10.1/targets/x86_64-linux/lib/stubs/libcuda.so
+cuda-driver-dev-10-0: /usr/local/cuda-10.0/targets/x86_64-linux/lib/stubs/libcuda.so
+libcuda1-418: /usr/lib/i386-linux-gnu/libcuda.so.1
+cuda-documentation-7-5: /usr/local/cuda-7.5/doc/man/man7/libcuda.so.7
+libcuda1-418: /usr/lib/x86_64-linux-gnu/libcuda.so.1
+cuda-documentation-10-1: /usr/local/cuda-10.1/doc/man/man7/libcuda.so.7
+libcuda1-418: /usr/lib/i386-linux-gnu/libcuda.so.418.87.01
+libcuda1-418: /usr/lib/x86_64-linux-gnu/libcuda.so.418.87.01
+cuda-documentation-10-0: /usr/local/cuda-10.0/doc/man/man7/libcuda.so.7
+libcuda1-418: /usr/lib/x86_64-linux-gnu/libcuda.so
+cuda-driver-dev-7-5: /usr/local/cuda-7.5/targets/x86_64-linux/lib/stubs/libcuda.so
+cuda-cudart-dev-10-0: /usr/local/cuda-10.0/targets/x86_64-linux/lib/libcudart.so
+cuda-documentation-10-0: /usr/local/cuda-10.0/doc/man/man7/libcudart.so.7
+cuda-cudart-7-5: /usr/local/cuda-7.5/targets/x86_64-linux/lib/libcudart.so.7.5
+cuda-cudart-7-5: /usr/local/cuda-7.5/targets/x86_64-linux/lib/libcudart.so.7.5.18
+cuda-documentation-7-5: /usr/local/cuda-7.5/doc/man/man7/libcudart.so.7
+cuda-documentation-10-1: /usr/local/cuda-10.1/doc/man/man7/libcudart.so.7
+cuda-cudart-dev-10-1: /usr/local/cuda-10.1/targets/x86_64-linux/lib/libcudart.so
+cuda-cudart-10-0: /usr/local/cuda-10.0/targets/x86_64-linux/lib/libcudart.so.10.0.130
+cuda-cudart-7-5: /usr/local/cuda-7.5/targets/x86_64-linux/lib/libcudart.so
+cuda-cudart-10-0: /usr/local/cuda-10.0/targets/x86_64-linux/lib/libcudart.so.10.0
+cuda-cudart-10-1: /usr/local/cuda-10.1/targets/x86_64-linux/lib/libcudart.so.10.1.243
+cuda-cudart-10-1: /usr/local/cuda-10.1/targets/x86_64-linux/lib/libcudart.so.10.1
+
+or with 'apt-file find'
+
+juergen@regulus:~/projects/asxp_npr2$ while read in; do apt-file find "$in"; done < libnames1.txt 
+libboost-system1.58-dev: /usr/lib/x86_64-linux-gnu/libboost_system.so
+libboost-system1.58.0: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.58.0
+libboost-thread1.58-dev: /usr/lib/x86_64-linux-gnu/libboost_thread.so
+libboost-thread1.58.0: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.58.0
+libglu1-mesa: /usr/lib/x86_64-linux-gnu/libGLU.so.1
+libglu1-mesa: /usr/lib/x86_64-linux-gnu/libGLU.so.1.3.1
+libglu1-mesa-dev: /usr/lib/x86_64-linux-gnu/libGLU.so
+libcgal-dev: /usr/lib/x86_64-linux-gnu/libCGAL.so
+libcgal11v5: /usr/lib/x86_64-linux-gnu/libCGAL.so.11
+libcgal11v5: /usr/lib/x86_64-linux-gnu/libCGAL.so.11.0.1
+libcgal-dev: /usr/lib/x86_64-linux-gnu/libCGAL_Core.so
+libcgal11v5: /usr/lib/x86_64-linux-gnu/libCGAL_Core.so.11
+libcgal11v5: /usr/lib/x86_64-linux-gnu/libCGAL_Core.so.11.0.1
+julia: /usr/lib/x86_64-linux-gnu/julia/libgmp.so
+libgmp-dev: /usr/lib/x86_64-linux-gnu/libgmp.so
+libgmp10: /usr/lib/x86_64-linux-gnu/libgmp.so.10
+libgmp10: /usr/lib/x86_64-linux-gnu/libgmp.so.10.3.0
+libgmpv4-dev: /usr/lib/x86_64-linux-gnu/libgmp.so
+libssl1.0.0: /usr/lib/x86_64-linux-gnu/openssl-1.0.0/engines/libgmp.so
+julia: /usr/lib/x86_64-linux-gnu/julia/libmpfr.so
+libmpfr-dev: /usr/lib/x86_64-linux-gnu/libmpfr.so
+libmpfr4: /usr/lib/x86_64-linux-gnu/libmpfr.so.4
+libmpfr4: /usr/lib/x86_64-linux-gnu/libmpfr.so.4.1.4
+libgts-dev: /usr/lib/x86_64-linux-gnu/libgts.so
+libglib2.0-0: /lib/x86_64-linux-gnu/libglib-2.0.so.0
+libglib2.0-0: /lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.0
+libglib2.0-0: /lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.2
+libglib2.0-0-dbg: /usr/share/gdb/auto-load/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.0-gdb.py
+libglib2.0-0-dbg: /usr/share/gdb/auto-load/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.4800.2-gdb.py
+libglib2.0-dev: /usr/lib/x86_64-linux-gnu/libglib-2.0.so
+gcc-arm-linux-androideabi: /usr/arm-linux-androideabi/lib/libm.so
+gcc-i686-linux-android: /usr/x86_64-linux-gnu/i686-linux-android/lib/libm.so
+julia: /usr/lib/x86_64-linux-gnu/julia/libopenlibm.so
+libc6: /lib/x86_64-linux-gnu/libm.so.6
+libc6-arm64-cross: /usr/aarch64-linux-gnu/lib/libm.so.6
+libc6-armel-cross: /usr/arm-linux-gnueabi/lib/libm.so.6
+libc6-armhf-cross: /usr/arm-linux-gnueabihf/lib/libm.so.6
+libc6-dev: /usr/lib/x86_64-linux-gnu/libm.so
+libc6-dev-arm64-cross: /usr/aarch64-linux-gnu/lib/libm.so
+libc6-dev-armel-cross: /usr/arm-linux-gnueabi/lib/libm.so
+libc6-dev-armhf-cross: /usr/arm-linux-gnueabihf/lib/libm.so
+libc6-dev-hppa-cross: /usr/hppa-linux-gnu/lib/libm.so
+libc6-dev-i386: /usr/lib32/libm.so
+libc6-dev-m68k-cross: /usr/m68k-linux-gnu/lib/libm.so
+libc6-dev-mips-cross: /usr/mips-linux-gnu/lib/libm.so
+libc6-dev-mips32-mips64-cross: /usr/mips64-linux-gnuabi64/libo32/libm.so
+libc6-dev-mips32-mips64el-cross: /usr/mips64el-linux-gnuabi64/libo32/libm.so
+libc6-dev-mips64-cross: /usr/mips64-linux-gnuabi64/lib/libm.so
+libc6-dev-mips64-mips-cross: /usr/mips-linux-gnu/lib64/libm.so
+libc6-dev-mips64-mipsel-cross: /usr/mipsel-linux-gnu/lib64/libm.so
+libc6-dev-mips64el-cross: /usr/mips64el-linux-gnuabi64/lib/libm.so
+libc6-dev-mipsel-cross: /usr/mipsel-linux-gnu/lib/libm.so
+libc6-dev-mipsn32-mips-cross: /usr/mips-linux-gnu/lib32/libm.so
+libc6-dev-mipsn32-mips64-cross: /usr/mips64-linux-gnuabi64/lib32/libm.so
+libc6-dev-mipsn32-mips64el-cross: /usr/mips64el-linux-gnuabi64/lib32/libm.so
+libc6-dev-mipsn32-mipsel-cross: /usr/mipsel-linux-gnu/lib32/libm.so
+libc6-dev-powerpc-cross: /usr/powerpc-linux-gnu/lib/libm.so
+libc6-dev-powerpc-ppc64-cross: /usr/powerpc64-linux-gnu/lib32/libm.so
+libc6-dev-powerpcspe-cross: /usr/powerpc-linux-gnuspe/lib/libm.so
+libc6-dev-ppc64-cross: /usr/powerpc64-linux-gnu/lib/libm.so
+libc6-dev-ppc64-powerpc-cross: /usr/powerpc-linux-gnu/lib64/libm.so
+libc6-dev-ppc64el-cross: /usr/powerpc64le-linux-gnu/lib/libm.so
+libc6-dev-s390-s390x-cross: /usr/s390x-linux-gnu/lib32/libm.so
+libc6-dev-s390x-cross: /usr/s390x-linux-gnu/lib/libm.so
+libc6-dev-sh4-cross: /usr/sh4-linux-gnu/lib/libm.so
+libc6-dev-sparc-sparc64-cross: /usr/sparc64-linux-gnu/lib32/libm.so
+libc6-dev-sparc64-cross: /usr/sparc64-linux-gnu/lib/libm.so
+libc6-dev-x32: /usr/libx32/libm.so
+libc6-hppa-cross: /usr/hppa-linux-gnu/lib/libm.so.6
+libc6-i386: /lib32/libm.so.6
+libc6-m68k-cross: /usr/m68k-linux-gnu/lib/libm.so.6
+libc6-mips-cross: /usr/mips-linux-gnu/lib/libm.so.6
+libc6-mips32-mips64-cross: /usr/mips64-linux-gnuabi64/libo32/libm.so.6
+libc6-mips32-mips64el-cross: /usr/mips64el-linux-gnuabi64/libo32/libm.so.6
+libc6-mips64-cross: /usr/mips64-linux-gnuabi64/lib/libm.so.6
+libc6-mips64-mips-cross: /usr/mips-linux-gnu/lib64/libm.so.6
+libc6-mips64-mipsel-cross: /usr/mipsel-linux-gnu/lib64/libm.so.6
+libc6-mips64el-cross: /usr/mips64el-linux-gnuabi64/lib/libm.so.6
+libc6-mipsel-cross: /usr/mipsel-linux-gnu/lib/libm.so.6
+libc6-mipsn32-mips-cross: /usr/mips-linux-gnu/lib32/libm.so.6
+libc6-mipsn32-mips64-cross: /usr/mips64-linux-gnuabi64/lib32/libm.so.6
+libc6-mipsn32-mips64el-cross: /usr/mips64el-linux-gnuabi64/lib32/libm.so.6
+libc6-mipsn32-mipsel-cross: /usr/mipsel-linux-gnu/lib32/libm.so.6
+libc6-powerpc-cross: /usr/powerpc-linux-gnu/lib/libm.so.6
+libc6-powerpc-ppc64-cross: /usr/powerpc64-linux-gnu/lib32/libm.so.6
+libc6-powerpcspe-cross: /usr/powerpc-linux-gnuspe/lib/libm.so.6
+libc6-ppc64-cross: /usr/powerpc64-linux-gnu/lib/libm.so.6
+libc6-ppc64-powerpc-cross: /usr/powerpc-linux-gnu/lib64/libm.so.6
+libc6-ppc64el-cross: /usr/powerpc64le-linux-gnu/lib/libm.so.6
+libc6-s390-s390x-cross: /usr/s390x-linux-gnu/lib32/libm.so.6
+libc6-s390x-cross: /usr/s390x-linux-gnu/lib/libm.so.6
+libc6-sh4-cross: /usr/sh4-linux-gnu/lib/libm.so.6
+libc6-sparc-sparc64-cross: /usr/sparc64-linux-gnu/lib32/libm.so.6
+libc6-sparc64-cross: /usr/sparc64-linux-gnu/lib/libm.so.6
+libc6-x32: /libx32/libm.so.6
+libc6.1-alpha-cross: /usr/alpha-linux-gnu/lib/libm.so.6.1
+libc6.1-dev-alpha-cross: /usr/alpha-linux-gnu/lib/libm.so
+libopenlibm-dev: /usr/lib/x86_64-linux-gnu/libopenlibm.so
+libopenlibm2: /usr/lib/x86_64-linux-gnu/libopenlibm.so.2
+libopenlibm2: /usr/lib/x86_64-linux-gnu/libopenlibm.so.2.1
+libcuda1-304: /usr/lib/i386-linux-gnu/libcuda.so
+libcuda1-304: /usr/lib/i386-linux-gnu/libcuda.so.1
+libcuda1-304: /usr/lib/i386-linux-gnu/libcuda.so.304.131
+libcuda1-304: /usr/lib/i386-linux-gnu/libcuda.so.304.135
+libcuda1-304: /usr/lib/x86_64-linux-gnu/libcuda.so
+libcuda1-304: /usr/lib/x86_64-linux-gnu/libcuda.so.1
+libcuda1-304: /usr/lib/x86_64-linux-gnu/libcuda.so.304.131
+libcuda1-304: /usr/lib/x86_64-linux-gnu/libcuda.so.304.135
+libcuda1-304-updates: /usr/lib/i386-linux-gnu/libcuda.so
+libcuda1-304-updates: /usr/lib/i386-linux-gnu/libcuda.so.1
+libcuda1-304-updates: /usr/lib/i386-linux-gnu/libcuda.so.304.131
+libcuda1-304-updates: /usr/lib/x86_64-linux-gnu/libcuda.so
+libcuda1-304-updates: /usr/lib/x86_64-linux-gnu/libcuda.so.1
+libcuda1-304-updates: /usr/lib/x86_64-linux-gnu/libcuda.so.304.131
+libcuda1-340: /usr/lib/i386-linux-gnu/libcuda.so
+libcuda1-340: /usr/lib/i386-linux-gnu/libcuda.so.1
+libcuda1-340: /usr/lib/i386-linux-gnu/libcuda.so.340.102
+libcuda1-340: /usr/lib/i386-linux-gnu/libcuda.so.340.104
+libcuda1-340: /usr/lib/i386-linux-gnu/libcuda.so.340.96
+libcuda1-340: /usr/lib/x86_64-linux-gnu/libcuda.so
+libcuda1-340: /usr/lib/x86_64-linux-gnu/libcuda.so.1
+libcuda1-340: /usr/lib/x86_64-linux-gnu/libcuda.so.340.102
+libcuda1-340: /usr/lib/x86_64-linux-gnu/libcuda.so.340.104
+libcuda1-340: /usr/lib/x86_64-linux-gnu/libcuda.so.340.96
+libcuda1-361: /usr/lib/i386-linux-gnu/libcuda.so
+libcuda1-361: /usr/lib/i386-linux-gnu/libcuda.so.1
+libcuda1-361: /usr/lib/i386-linux-gnu/libcuda.so.361.42
+libcuda1-361: /usr/lib/x86_64-linux-gnu/libcuda.so
+libcuda1-361: /usr/lib/x86_64-linux-gnu/libcuda.so.1
+libcuda1-361: /usr/lib/x86_64-linux-gnu/libcuda.so.361.42
+libcuda1-384: /usr/lib/i386-linux-gnu/libcuda.so
+libcuda1-384: /usr/lib/i386-linux-gnu/libcuda.so.1
+libcuda1-384: /usr/lib/i386-linux-gnu/libcuda.so.384.111
+libcuda1-384: /usr/lib/x86_64-linux-gnu/libcuda.so
+libcuda1-384: /usr/lib/x86_64-linux-gnu/libcuda.so.1
+libcuda1-384: /usr/lib/x86_64-linux-gnu/libcuda.so.384.111
+nvidia-cuda-dev: /usr/lib/x86_64-linux-gnu/stubs/libcuda.so
+nvidia-cuda-dev: /usr/share/man/man7/libcuda.so.7.gz
+libcudart7.5: /usr/lib/x86_64-linux-gnu/libcudart.so.7.5
+libcudart7.5: /usr/lib/x86_64-linux-gnu/libcudart.so.7.5.18
+nvidia-cuda-dev: /usr/lib/x86_64-linux-gnu/libcudart.so
+nvidia-cuda-dev: /usr/share/man/man7/libcudart.so.7.gz
+juergen@regulus:~/projects/asxp_npr2$ 
+
+
