@@ -80,17 +80,10 @@ PaintHelper::PaintHelper()
 
     init_colmat();
 
-    full_plot1 = 0;
-    full_plot2 = 0;
-
-    dsep = 10;
-
     displayFlowLines = false;
     displayCrossField = true;
 
     streamLineColor = 0;
-
-    streamgen_type = 1;
 
     colmat_valid = true;
 
@@ -114,7 +107,7 @@ PaintHelper::~PaintHelper()
 	free(colmat_g);
 	free(colmat_b);
 
-	free(pdata);
+	delete [] pdata;
 }
 
 
@@ -258,6 +251,7 @@ void shade_floyd_steinberg(int x, int y, double & color_red, double & color_gree
 //  -----------------> x
 
 
+#if 0
 
 static double bilin_interpolate(double a, double b, double c, double d, double sx, double sy) {
 
@@ -271,7 +265,7 @@ static double bilin_interpolate(double a, double b, double c, double d, double s
 	return val;
 }
 
-
+#endif
 
 
 void PaintHelper::compute_colmat(double a, double b, int xmax, int ymax)
@@ -446,20 +440,15 @@ int translate_poly(cudaPoly3 & f3_h, Poly3 & f3)
 	}
 
 	f3_h.len = i;
+
+	return 0;
 }
 
 
 void PaintHelper::compute_colmat_gpu(double a, double b, int xmax, int ymax)
 {
 
-	double local_scale = gl_win_size/xmax;
-
 	double parm[2];
-	int win_offset = xmax/2;
-	bool disc_zero;
-
-	int x;
-	int y;
 
 	cout << "xmax = " << xmax << "ymax = " << ymax << endl;
 
@@ -480,164 +469,9 @@ void PaintHelper::compute_colmat_gpu(double a, double b, int xmax, int ymax)
 
 
 
-// (x, y) raster coordinates
-
-void FindSilhouette::set_xy_max(int xmaxa, int ymaxa) {
-	xmax = xmaxa;
-	ymax = ymaxa;
-}
-
-int FindSilhouette::operator()(double x, double y) {
-
-	int cx = int(x);
-	int cy = int(y);
-
-	if ((cx < 0 || cx >= xmax) || (cy < 0 || cy >= ymax)) {
-		return true;
-	} else {
-		return pp.is_silhouette_mat[cx][cy];
-	}
-}
-
-FindSilhouette is_silhouette_point;
-
-void FindBackground::set_xy_max(int xmaxa, int ymaxa) {
-	xmax = xmaxa;
-	ymax = ymaxa;
-}
-
-int FindBackground::operator()(double x, double y) {
-
-	int cx = int(x);
-	int cy = int(y);
-
-	if ((cx < 0 || cx >= xmax) || (cy < 0 || cy >= ymax)) {
-		return true;
-	} else {
-		return (pp.z_buf[cx][cy] == M_INF);
-	}
-}
-
-FindBackground is_background_point;
-
-
-void PaintHelper::compute_streamfield_CGAL(int xmax, int ymax)
-{
-
-	const double dsep_multiplier = 4 * 0.6;
-
-	if (!full_plot1) {
-		full_plot1 = new Streamplot(&pp.v1_buf, &pp.v2_buf, xmax, ymax, dsep * dsep_multiplier,
-								xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
-								&is_background_point);
-
-		full_plot1->set_mode(1);
-
-		full_plot1->compute_stream_field_CGAL();
-	}
-
-	if (!full_plot2) {
-
-		full_plot2 = new Streamplot(&pp.v1_buf, &pp.v2_buf, xmax, ymax, dsep * dsep_multiplier,
-								xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
-								&is_background_point);
-
-		full_plot2->set_mode(2);
-
-		full_plot2->compute_stream_field_CGAL();
-	}
-
-}
-
-void PaintHelper::compute_streamfield(int xmax, int ymax)
-{
-
-	bool init_streamfield1 = true;
-	bool init_streamfield2 = true;
-
-	if (streamgen_type == 1) {
-		compute_streamfield_CGAL(xmax, ymax);
-		return;
-	}
-
-	for(int tstx = 0; tstx < xmax; tstx += 10) {
-
-		for(int tsty = 0; tsty < ymax; tsty += 10) {
-
-			char buf[128];
-
-			sprintf(buf, "tstx = %d, tsty = %d", tstx, tsty);
-
-			displayLabel->setText(QString(buf));
-			displayLabel->repaint();
-
-			cout << "tstx = " << tstx << " tsty = " << tsty << endl;
-
-			while (1) {
-
-				if (pp.z_buf[tstx][tsty] == M_INF) {
-					break;
-				}
-
-				double xstart, ystart;
-
-				xstart = xrast_to_x(tstx);
-				ystart = yrast_to_y(tsty);
-
-#if 0
-				Streamline flow_line(&v1_buf, &v2_buf, xmax, ymax, x_to_xrast, y_to_yrast, &is_silhouette_point);
-
-				flow_line.integrate_from(xstart, ystart);
-#endif
-
-
-				if (!full_plot1) {
-
-					full_plot1 = new Streamplot(&pp.v1_buf, &pp.v2_buf, xmax, ymax, dsep,  xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
-											&is_silhouette_point);
-
-					full_plot1->set_mode(1);
-
-					init_streamfield1 = true;
-
-				}
-
-				cout << "compute streamfield 1" << endl;
-
-				full_plot1->compute_stream_field(xstart, ystart, init_streamfield1);
-
-				init_streamfield1 = false;
-
-				if (!full_plot2) {
-
-					full_plot2 = new Streamplot(&pp.v1_buf, &pp.v2_buf, xmax, ymax, dsep,  xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
-											&is_silhouette_point);
-
-					full_plot2->set_mode(2);
-
-
-					init_streamfield2 = true;
-				}
-
-				cout << "compute streamfield 2" << endl;
-
-				full_plot2->compute_stream_field(xstart, ystart, init_streamfield2);
-
-				init_streamfield2 = false;
-
-				break;
-
-			}
-		}
-	}
-
-
-
-}
-
-
-
 void PaintHelper::paint_fullplot12(QPainter* painter) {
+
+	painter->setRenderHint(QPainter::HighQualityAntialiasing, true);
 
 	switch (streamLineColor) {
 	case 0:
@@ -653,8 +487,8 @@ void PaintHelper::paint_fullplot12(QPainter* painter) {
 	// dummy while, only for break
 	Streamplot* full_plot_arr[2];
 
-	full_plot_arr[0] = full_plot1;
-	full_plot_arr[1] = full_plot2;
+	full_plot_arr[0] = pp.full_plot1;
+	full_plot_arr[1] = pp.full_plot2;
 
 	for (int ifpa = 0; ifpa < 2; ++ifpa) {
 
@@ -745,16 +579,16 @@ void PaintHelper::paint_display_crossfield(int xmax, int ymax, QPainter* painter
 	}
 }
 
-void PaintHelper::paint_from_colmat(QPainter* painter, int x, int y, int xmax, int ymax, double divider) {
+void PaintHelper::paint_from_colmat(QPainter* painter, int xmax, int ymax, double divider) {
 
 	Timing time0;
 	time0.start();
 
 	int stride = gl_win_size / divider;
 
-	for (x = 0; x < xmax; ++x) {
+	for (int x = 0; x < xmax; ++x) {
 
-		for (y = 0; y < ymax; ++y) {
+		for (int y = 0; y < ymax; ++y) {
 
 			int col_red = mref(colmat_r, x, y);
 			int col_green = mref(colmat_g, x, y);
@@ -792,18 +626,6 @@ void PaintHelper::paint_silhouette_line(QPainter* painter, int xmax, int ymax) {
 	}
 }
 
-void PaintHelper::paint_reset_full_plots() {
-
-	if (full_plot1 != 0) {
-		delete full_plot1;
-		full_plot1 = 0;
-	}
-
-	if (full_plot2 != 0) {
-		delete full_plot2;
-		full_plot2 = 0;
-	}
-}
 
 void PaintHelper::paint_compute_colmats(double a, double b, int xmax, int ymax) {
 
@@ -830,10 +652,10 @@ void PaintHelper::paint_compute_colmats(double a, double b, int xmax, int ymax) 
 
 	colmat_valid = true;
 
-	paint_reset_full_plots();
+	pp.reset_full_plots();
 
 	if (isPrint) {
-		compute_streamfield(xmax, ymax);
+		pp.compute_streamfield(xmax, ymax);
 	}
 }
 
@@ -915,14 +737,11 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 		painter->drawText(100,100, QString(buf));
     }
 
-    int x;
-    int y;
-
     bool is_pen_image = displayFlowLines && (shade_type == 0);
 
     if (! is_pen_image) {
 
-		paint_from_colmat(painter, x, y, xmax, ymax, divider);
+		paint_from_colmat(painter, xmax, ymax, divider);
     }
 
     if (colmat_valid && displayFlowLines) {
@@ -942,7 +761,7 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
     	}
     	// get mouse (x,y) as start-point for integrate flow-line
 
-    	if (full_plot1 && full_plot2) {
+    	if (pp.full_plot1 && pp.full_plot2) {
 
 			paint_fullplot12(painter);
     	}

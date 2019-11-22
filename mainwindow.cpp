@@ -456,9 +456,11 @@ void Window::print()
 	screen_main->scale = 0.5;
 	screen_main->colmat_valid = false;
 
-	double old_dsep = screen_main->paint_helper->dsep;
+	double old_dsep = pp.dsep;
 
-	screen_main->paint_helper->dsep = 2 * old_dsep;
+	pp.dsep = 2 * old_dsep;
+
+
 
 	screen_main->paint_helper->displayFlowLines = true;
 	screen_main->paint_helper->displayCrossField = false;
@@ -493,7 +495,8 @@ void Window::print()
 #endif
 
 
-	screen_main->paint_helper->dsep = old_dsep;
+	pp.dsep = old_dsep;
+
 	screen_main->scale = 1.0;
 	screen_main->colmat_valid = false;
 
@@ -614,17 +617,19 @@ void Window::displayFlowLines2(int checked)
 	screen_main->refresh();
 }
 
+
+
 void Window::resetFlowfield()
 {
-	Streamplot* full_plot1 = screen_main->paint_helper->full_plot1;
-	Streamplot* full_plot2 = screen_main->paint_helper->full_plot2;
+	Streamplot* full_plot1 = pp.full_plot1;
+	Streamplot* full_plot2 = pp.full_plot2;
 
 	bool do_repaint = true;
 
 	if (full_plot1 != 0) {
 
-		delete screen_main->paint_helper->full_plot1;
-		screen_main->paint_helper->full_plot1 = 0;
+		delete pp.full_plot1;
+		pp.full_plot1 = 0;
 
 		do_repaint = true;
 
@@ -634,8 +639,8 @@ void Window::resetFlowfield()
 	}
 	if (full_plot2 != 0) {
 
-		delete screen_main->paint_helper->full_plot2;
-		screen_main->paint_helper->full_plot2 = 0;
+		delete pp.full_plot2;
+		pp.full_plot2 = 0;
 
 		do_repaint = true;
 
@@ -644,13 +649,16 @@ void Window::resetFlowfield()
 
 	}
 
-	screen_main->paint_helper->compute_streamfield(gl_win_size, gl_win_size);
+	pp.compute_streamfield(gl_win_size, gl_win_size);
 	screen_main->colmat_valid = true;
 
 	if (do_repaint)
 		screen_main->repaint();
 
 }
+
+
+
 
 void Window::calcTriangulation()
 {
@@ -737,9 +745,10 @@ void Window::selectSurf(int sel_ind)
 void Window::flowstreamMeth(int sel_ind)
 {
 	if (sel_ind == 0) {
-		screen_main->paint_helper->streamgen_type = 1;
+		pp.streamgen_type = 1;
+
 	} else if (sel_ind == 1) {
-		screen_main->paint_helper->streamgen_type = 0;
+		pp.streamgen_type = 0;
 	}
 }
 
@@ -776,11 +785,11 @@ void Window::doLineInput()
 
 	} else if (strncmp(buf, "cgal", 4) == 0) {
 
-		screen_main->paint_helper->streamgen_type = 1;
+		pp.streamgen_type = 1;
 
 	} else if (strncmp(buf, "own", 3) == 0) {
 
-		screen_main->paint_helper->streamgen_type = 0;
+		pp.streamgen_type = 0;
 
 	} else if (strncmp(buf, "dsep", 4) == 0) {
 
@@ -788,7 +797,7 @@ void Window::doLineInput()
 
 		sscanf(buf + 4, "%lf", &dsep);
 
-		screen_main->paint_helper->dsep = dsep;
+		pp.dsep = dsep;
 
 		resetFlowfield();
 	} else if (strncmp(buf,"color", 5) == 0) {

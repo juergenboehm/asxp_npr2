@@ -14,7 +14,7 @@ NVCC = nvcc
 
 NVCFLAGS= -O2 --use_fast_math
 
-NVINC = -I/usr/local/cuda/include -I/usr/local/cuda-10.1/samples/common/inc/
+NVINC = -I/usr/local/cuda/include -I/usr/local/cuda-10.2/samples/common/inc/
 
 CUDA_LIBDIR = -L$(CUDA_TOOLKIT_DIR)/lib64
 CUDA_LIBS = -lcudart

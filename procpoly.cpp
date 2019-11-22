@@ -12,7 +12,7 @@
 #include "poly.h"
 #include "parser.h"
 
-
+#include "streamplot.h"
 
 #include "screenwidget.h"
 
@@ -32,6 +32,11 @@
 
 #define POLY_DEG 3
 #define POLY_DEG1 (POLY_DEG+1)
+
+
+FindBackground is_background_point;
+FindSilhouette is_silhouette_point;
+
 
 
 
@@ -325,11 +330,12 @@ void m_fold(const double* m_image, const double* m_mask, int n, double &result) 
 #define RAND_COL ((int)(255.0*((float)rand())/RAND_MAX))
 
 
-const int max_roots = 10;
 
 const int arr_size = 2 * gl_win_size;
 
-ProcPoly pp(arr_size, max_roots, gl_win_size, xrast_to_x, yrast_to_y);
+const int gl_max_zeros = 10;
+
+ProcPoly pp(arr_size, gl_max_zeros, gl_win_size, xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast);
 
 
 
@@ -605,6 +611,10 @@ void ProcPoly::fill_arrays(int xmax, int ymax, int shade_type) {
 
 	bool disc_zero;
 
+	double* full_z_list = new double[max_roots];
+
+	assert(full_z_list);
+
 
 	for (x = 0; x < xmax; ++x) {
     	for (y = 0; y < ymax; ++y) {
@@ -618,7 +628,7 @@ void ProcPoly::fill_arrays(int xmax, int ymax, int shade_type) {
     		double z;
     		double n_z;
 
-    		double full_z_list[max_roots];
+    		//double full_z_list[max_roots];
     		int jsel = -1;
     		int nsel = -1;
 
@@ -698,15 +708,17 @@ void ProcPoly::fill_arrays(int xmax, int ymax, int shade_type) {
     	}
     }
 
+	delete [] full_z_list;
+
 }
 
 void ProcPoly::calc_silhouette(int xmax, int ymax, double & k_gauss_min, double & k_gauss_max) {
 
-	double local_scale = akt_win_size/xmax;
-	int win_offset = xmax/2;
+	//double local_scale = akt_win_size/xmax;
+	//int win_offset = xmax/2;
 
-	UNUSED(local_scale);
-	UNUSED(win_offset);
+	//UNUSED(local_scale);
+	//UNUSED(win_offset);
 
 	k_gauss_min = DBL_MAX;
     k_gauss_max = -DBL_MAX;
@@ -807,4 +819,190 @@ void ProcPoly::calc_silhouette(int xmax, int ymax, double & k_gauss_min, double 
     }
 
 }
+
+
+void ProcPoly::reset_full_plots() {
+
+	if (full_plot1 != 0) {
+		delete full_plot1;
+		full_plot1 = 0;
+	}
+
+	if (full_plot2 != 0) {
+		delete full_plot2;
+		full_plot2 = 0;
+	}
+}
+
+
+
+
+
+void ProcPoly::compute_streamfield_CGAL(int xmax, int ymax)
+{
+
+	const double dsep_multiplier = 4 * 0.6;
+
+	if (!full_plot1) {
+		full_plot1 = new Streamplot(&v1_buf, &v2_buf, xmax, ymax, dsep * dsep_multiplier,
+								xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
+								&is_background_point);
+
+		full_plot1->set_mode(1);
+
+		full_plot1->compute_stream_field_CGAL();
+	}
+
+	if (!full_plot2) {
+
+		full_plot2 = new Streamplot(&pp.v1_buf, &pp.v2_buf, xmax, ymax, dsep * dsep_multiplier,
+								xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
+								&is_background_point);
+
+		full_plot2->set_mode(2);
+
+		full_plot2->compute_stream_field_CGAL();
+	}
+
+}
+
+void ProcPoly::compute_streamfield(int xmax, int ymax)
+{
+
+	bool init_streamfield1 = true;
+	bool init_streamfield2 = true;
+
+	if (streamgen_type == 1) {
+		compute_streamfield_CGAL(xmax, ymax);
+		return;
+	}
+
+	for(int tstx = 0; tstx < xmax; tstx += 10) {
+
+		for(int tsty = 0; tsty < ymax; tsty += 10) {
+
+			char buf[128];
+
+			sprintf(buf, "tstx = %d, tsty = %d", tstx, tsty);
+
+			//displayLabel->setText(QString(buf));
+			//displayLabel->repaint();
+
+			cout << "tstx = " << tstx << " tsty = " << tsty << endl;
+
+			while (1) {
+
+				if (pp.z_buf[tstx][tsty] == M_INF) {
+					break;
+				}
+
+				double xstart, ystart;
+
+				xstart = xrast_to_x(tstx);
+				ystart = yrast_to_y(tsty);
+
+#if 0
+				Streamline flow_line(&v1_buf, &v2_buf, xmax, ymax, x_to_xrast, y_to_yrast, &is_silhouette_point);
+
+				flow_line.integrate_from(xstart, ystart);
+#endif
+
+
+				if (!full_plot1) {
+
+					full_plot1 = new Streamplot(&v1_buf, &v2_buf, xmax, ymax, dsep,  xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
+											&is_silhouette_point);
+
+					full_plot1->set_mode(1);
+
+					init_streamfield1 = true;
+
+				}
+
+				cout << "compute streamfield 1" << endl;
+
+				full_plot1->compute_stream_field(xstart, ystart, init_streamfield1);
+
+				init_streamfield1 = false;
+
+				if (!full_plot2) {
+
+					full_plot2 = new Streamplot(&pp.v1_buf, &pp.v2_buf, xmax, ymax, dsep,  xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast,
+											&is_silhouette_point);
+
+					full_plot2->set_mode(2);
+
+
+					init_streamfield2 = true;
+				}
+
+				cout << "compute streamfield 2" << endl;
+
+				full_plot2->compute_stream_field(xstart, ystart, init_streamfield2);
+
+				init_streamfield2 = false;
+
+				break;
+
+			}
+		}
+	}
+
+
+
+}
+
+
+
+// (x, y) raster coordinates
+
+void FindSilhouette::set_xy_max(int xmaxa, int ymaxa) {
+	xmax = xmaxa;
+	ymax = ymaxa;
+}
+
+int FindSilhouette::operator()(double x, double y) {
+
+	int cx = int(x);
+	int cy = int(y);
+
+	if ((cx < 0 || cx >= xmax) || (cy < 0 || cy >= ymax)) {
+		return true;
+	} else {
+		return pp.is_silhouette_mat[cx][cy];
+	}
+}
+
+
+void FindBackground::set_xy_max(int xmaxa, int ymaxa) {
+	xmax = xmaxa;
+	ymax = ymaxa;
+}
+
+int FindBackground::operator()(double x, double y) {
+
+	int cx = int(x);
+	int cy = int(y);
+
+	if ((cx < 0 || cx >= xmax) || (cy < 0 || cy >= ymax)) {
+		return true;
+	} else {
+		return (pp.z_buf[cx][cy] == M_INF);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

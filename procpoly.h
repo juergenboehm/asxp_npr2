@@ -7,6 +7,7 @@
 
 #include "poly.h"
 #include "streamline.h"
+#include "streamplot.h"
 #include "asxp_arrays.h"
 #include "pointlist.h"
 
@@ -15,18 +16,24 @@ class ProcPoly {
 
 public:
 
-	ProcPoly(int arr_size, int max_roots, int akt_win_sizea, Scale & xrast_to_xa, Scale & yrast_to_ya):
+	ProcPoly(const int arr_size, const int max_rootsa, const int akt_win_sizea,
+			Scale & xrast_to_xa, Scale & yrast_to_ya, Scale & x_to_xrasta, Scale & y_to_yrasta):
 
 		akt_win_size(akt_win_sizea),
 
+		max_roots(max_rootsa),
+
 		xrast_to_x(xrast_to_xa),
 		yrast_to_y(yrast_to_ya),
+
+		x_to_xrast(x_to_xrasta),
+		y_to_yrast(y_to_yrasta),
 
 		z_buf(boost::extents[arr_size][arr_size]),
 		n_buf(boost::extents[arr_size][arr_size]),
 
 
-		zfull_buf(boost::extents[arr_size][arr_size][max_roots]),
+		zfull_buf(boost::extents[arr_size][arr_size][max_rootsa]),
 		jsel_buf(boost::extents[arr_size][arr_size]),
 		nsel_buf(boost::extents[arr_size][arr_size]),
 
@@ -64,7 +71,11 @@ public:
 		pv2_buf(& v2_buf),
 
 		pl1_buf(& l1_buf),
-		pl2_buf(& l2_buf)
+		pl2_buf(& l2_buf),
+
+		streamgen_type(1),
+
+		dsep(10)
 
 
 
@@ -92,6 +103,16 @@ public:
 	void fill_arrays(int xmax, int ymax, int shade_type);
 
 	void calc_silhouette(int xmax, int ymax, double & k_gauss_min, double & k_gauss_max);
+
+
+	void reset_full_plots();
+
+
+
+	void compute_streamfield_CGAL(int xmax, int ymax);
+
+	void compute_streamfield(int xmax, int ymax);
+
 
 
 	Poly5 f5;
@@ -146,6 +167,14 @@ public:
 
 	Point2DList silhouette_pointl;
 
+	Streamplot* full_plot1;
+	Streamplot* full_plot2;
+
+
+	double dsep;
+
+	int streamgen_type; // 0 for own 1 for CGAL
+
 
 
 
@@ -154,8 +183,15 @@ private:
 
 	static const int max_deg = 20;
 
+	int max_roots;
+
+
 	Scale & xrast_to_x;
 	Scale & yrast_to_y;
+
+	Scale & x_to_xrast;
+	Scale & y_to_yrast;
+
 
 	int akt_win_size;
 
@@ -203,10 +239,40 @@ private:
 };
 
 
+class FindSilhouette : public PointClassifier {
+
+public:
+
+	virtual ~FindSilhouette() {};
+
+	virtual int operator()(double x, double y);
+	void set_xy_max(int xmaxa, int ymaxa);
+
+	int xmax;
+	int ymax;
+};
+
+class FindBackground : public PointClassifier {
+
+public:
+
+	virtual ~FindBackground() {};
+
+	virtual int operator()(double x, double y);
+	void set_xy_max(int xmaxa, int ymaxa);
+
+	int xmax;
+	int ymax;
+};
+
+
+
 
 extern ProcPoly pp;
 
-extern Scale xrast_to_x, yrast_to_y;
+extern Scale xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast;
+
+extern FindSilhouette is_silhouette_point;
 
 
 
