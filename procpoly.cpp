@@ -287,7 +287,15 @@ int ProcPoly::eval_coefs_poly_point_normal(Poly3 & f3, double x, double y, doubl
 		sl[0] = x + t * nx;
 		sl[1] = y + t * ny;
 		sl[2] = z + t * nz;
-		double fi = f3.eval(sl);
+
+		double sl1[3];
+
+		m_mult_mat_vec(sl, m_euler, sl1);
+
+
+		double fi = f3.eval(sl1);
+
+
 		for(int j = 0; j <= akt_deg_global; ++j) {
 			coefs[j] += fi * lagrange_basis[i][j];
 		}
@@ -389,9 +397,13 @@ void ProcPoly::eval_poly_f3(double x, double y, double z, double & resval)
 	sl[1] = y;
 	sl[2] = z;
 
+	double sl1[3];
+
+	m_mult_mat_vec(sl, m_euler, sl1);
+
 	//m_mult_mat_vec(sl, m_euler, sl1);
 
-	resval = f3.eval(sl);
+	resval = f3.eval(sl1);
 }
 
 int ProcPoly::eval_poly_poly_f3(double x, double y, double z, double & f, double* fnormal, double* fhessian)

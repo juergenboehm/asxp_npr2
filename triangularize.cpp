@@ -902,6 +902,8 @@ void init_c2t3_aux_data(C2t3* c2t3x)
 
 int cnt_pre_add_points;
 
+double max_fval;
+
 void try_add_point(Tr* trx, double x1, double y1, double z1)
 {
 	double fval;
@@ -909,6 +911,10 @@ void try_add_point(Tr* trx, double x1, double y1, double z1)
 	double fhessian[9];
 
 	pp.eval_poly_poly_f3(x1, y1, z1, fval, fnormal, fhessian);
+
+	max_fval = max(max_fval, fval);
+
+	//assert(abs(fval) < 1e-5);
 
 	double nnorm = fnormal[0] * fnormal[0] + fnormal[1] * fnormal[1] + fnormal[2] * fnormal[2];
 
@@ -927,6 +933,10 @@ void prepare_initial_points(Tr* trx)
 
 	cnt_pre_add_points = 0;
 
+	std::cout << "prepare_initial_points: start." << std::endl;
+
+	max_fval = -DBL_MAX;
+
 	for(int x = 0; x < gl_win_size; x += step ) {
 		for(int y = 0; y < gl_win_size; y += step ) {
 
@@ -941,6 +951,10 @@ void prepare_initial_points(Tr* trx)
 			}
 		}
 	}
+
+	std::cout << "phase xy, max_fval = " << max_fval << std::endl;
+
+	max_fval = -DBL_MAX;
 
 	for(int z = 0; z < gl_win_size; z += step) {
 		for(int x = 0; x < gl_win_size; x += step) {
@@ -965,6 +979,10 @@ void prepare_initial_points(Tr* trx)
 
 	}
 
+	std::cout << "phase zx, max_fval = " << max_fval << std::endl;
+
+	max_fval = -DBL_MAX;
+
 	for(int z = 0; z < gl_win_size; z += step) {
 		for(int y = 0; y < gl_win_size; y += step) {
 
@@ -987,6 +1005,11 @@ void prepare_initial_points(Tr* trx)
 		}
 
 	}
+
+	std::cout << "phase zy, max_fval = " << max_fval << std::endl;
+
+	//max_fval = -DBL_MAX;
+
 
 	std::cout << "points added = " << cnt_pre_add_points << std::endl;
 }
