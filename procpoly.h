@@ -229,7 +229,7 @@ private:
 
 	int akt_deg_global;
 
-	double akt_xbase[max_deg+1] = { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 };
+	double akt_xbase[max_deg+1] = { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0 };
 
 	double lagrange_basis[max_deg+1][max_deg+1];
 
@@ -270,7 +270,7 @@ public:
 
 extern ProcPoly pp;
 
-extern Scale xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast;
+extern Scale xrast_to_x, yrast_to_y, zrast_to_z, x_to_xrast, y_to_yrast, z_to_zrast;
 
 extern FindSilhouette is_silhouette_point;
 

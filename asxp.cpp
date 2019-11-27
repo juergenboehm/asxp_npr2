@@ -38,7 +38,7 @@
 
 int phong_exponent;
 
-Scale xrast_to_x, yrast_to_y, x_to_xrast, y_to_yrast;
+Scale xrast_to_x, yrast_to_y, zrast_to_z, x_to_xrast, y_to_yrast, z_to_zrast;
 
  
 
@@ -694,11 +694,15 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 	xrast_to_x.set(1/SCALE * local_scale_x, -win_offset_x/SCALE * local_scale_x);
 	yrast_to_y.set(1/SCALE * local_scale_y, -win_offset_y/SCALE * local_scale_y);
 
+	zrast_to_z.set(1/SCALE * local_scale_x, -win_offset_x/SCALE * local_scale_x);
+
 	// xrast = win_offset + x * SCALE/local_scale;
 	// and analogously to yrast =
 
 	x_to_xrast.set(SCALE/local_scale_x, win_offset_x);
 	y_to_yrast.set(SCALE/local_scale_y, win_offset_y);
+
+	z_to_zrast.set(SCALE/local_scale_x, win_offset_x);
 
 	cout << "xrast_to_x(x_to_xrast(1)) = " << xrast_to_x(x_to_xrast(1)) << endl;
 
@@ -707,8 +711,11 @@ void PaintHelper::paint(QPainter *painter, QPaintEvent *event, bool mouse_moved,
 
 	assert(xrast_to_x(x_to_xrast(1)) == 1);
 	assert(yrast_to_y(y_to_yrast(1)) == 1);
+	assert(zrast_to_z(z_to_zrast(1)) == 1);
+
 	assert(xrast_to_x(x_to_xrast(0)) == 0);
 	assert(yrast_to_y(y_to_yrast(0)) == 0);
+	assert(zrast_to_z(z_to_zrast(0)) == 0);
 
 	cout << "divider = " << divider << endl;
 

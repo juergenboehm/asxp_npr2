@@ -959,7 +959,7 @@ void prepare_initial_points(Tr* trx)
 	for(int z = 0; z < gl_win_size; z += step) {
 		for(int x = 0; x < gl_win_size; x += step) {
 
-			double z1 = xrast_to_x(z);
+			double z1 = zrast_to_z(z);
 			double x1 = xrast_to_x(x);
 
 			double root_list[root_list_len_max];
@@ -986,7 +986,7 @@ void prepare_initial_points(Tr* trx)
 	for(int z = 0; z < gl_win_size; z += step) {
 		for(int y = 0; y < gl_win_size; y += step) {
 
-			double z1 = xrast_to_x(z);
+			double z1 = zrast_to_z(z);
 			double y1 = xrast_to_x(y);
 
 			double root_list[root_list_len_max];
