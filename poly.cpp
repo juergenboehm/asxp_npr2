@@ -4,5 +4,5 @@
 
 #include "poly.h"
 
-Poly5 calcpoly;
+Poly5 calcpoly(5);
 

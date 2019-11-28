@@ -29,17 +29,17 @@
 int next_symbol(char* p_start, char * & p_sym_beg, char* & p_sym_next, int & symbol,
 		long & numval, int & varindex );
 
-template<class C, int nvars>
-int parse_expression(char* p, char* & p_next, Poly<C, nvars> & pvalue);
+template<class C>
+int parse_expression(char* p, char* & p_next, Poly<C> & pvalue);
 
-template<class C, int nvars>
-int parse_term(char* p, char* & p_next, Poly<C, nvars> & pvalue);
+template<class C>
+int parse_term(char* p, char* & p_next, Poly<C> & pvalue);
 
-template<class C, int nvars>
-int parse_factor(char* p, char* & p_next, Poly<C, nvars> &  pvalue);
+template<class C>
+int parse_factor(char* p, char* & p_next, Poly<C> &  pvalue);
 
-template<class C, int nvars>
-int parse_base(char* p, char* & p_next, Poly<C, nvars> & pvalue);
+template<class C>
+int parse_base(char* p, char* & p_next, Poly<C> & pvalue);
 
 
 // grammar is
@@ -50,8 +50,8 @@ int parse_base(char* p, char* & p_next, Poly<C, nvars> & pvalue);
 // base = variable | (expression) | number
 //
 
-template< class C, int nvars>
-int read_poly(char* poly_str, Poly<C, nvars> & perg)
+template< class C>
+int read_poly(char* poly_str, Poly<C> & perg)
 {
 	char *p_next;
 	parse_expression(poly_str, p_next, perg);
@@ -59,10 +59,12 @@ int read_poly(char* poly_str, Poly<C, nvars> & perg)
 	return 0;
 }
 
-template<class C, int nvars>
-int parse_expression(char* p, char* & p_next, Poly<C, nvars>  & pvalue)
+template<class C>
+int parse_expression(char* p, char* & p_next, Poly<C>  & pvalue)
 {
-	Poly<C, nvars> ptemp;
+	int nvars = pvalue.nvars;
+
+	Poly<C> ptemp(nvars);
 	char* pnexttemp;
 	char* pbeg;
 	int symbol;
@@ -86,7 +88,7 @@ int parse_expression(char* p, char* & p_next, Poly<C, nvars>  & pvalue)
 	parse_term(p, p_next, ptemp);
 
 	if (first_minus) {
-		ptemp.mul(Poly<C,nvars>(-1,0,0));
+		ptemp.mul(Poly<C>(-1,0,0, nvars));
 	}
 
 #ifdef TRACE
@@ -101,10 +103,10 @@ int parse_expression(char* p, char* & p_next, Poly<C, nvars>  & pvalue)
 
 		if (symbol == SYM_PLUS || symbol == SYM_MINUS) {
 			p = pnexttemp;
-			Poly<C, nvars> ptemp1;
+			Poly<C> ptemp1(nvars);
 			parse_term(p, pnexttemp, ptemp1);
 			if (symbol == SYM_MINUS) {
-				ptemp1.mul(Poly<C,nvars>(-1,0,0));
+				ptemp1.mul(Poly<C>(-1,0,0, nvars));
 			}
 #ifdef TRACE
 			cout << "term follow = " << ptemp1 << endl;
@@ -123,10 +125,12 @@ int parse_expression(char* p, char* & p_next, Poly<C, nvars>  & pvalue)
 }
 
 
-template<class C, int nvars>
-int parse_term(char* p, char* & p_next, Poly<C, nvars> & pvalue)
+template<class C>
+int parse_term(char* p, char* & p_next, Poly<C> & pvalue)
 {
-	Poly<C, nvars> ptemp;
+	int nvars = pvalue.nvars;
+
+	Poly<C> ptemp(nvars);
 	char* pnexttemp;
 	char* pbeg;
 	int symbol;
@@ -151,7 +155,7 @@ int parse_term(char* p, char* & p_next, Poly<C, nvars> & pvalue)
 
 		if (symbol == SYM_TIMES) {
 			p = pnexttemp;
-			Poly<C, nvars> ptemp1;
+			Poly<C> ptemp1(nvars);
 			parse_factor(p, pnexttemp, ptemp1);
 
 #ifdef TRACE
@@ -173,10 +177,12 @@ int parse_term(char* p, char* & p_next, Poly<C, nvars> & pvalue)
 	return 0;
 }
 
-template<class C, int nvars>
-int parse_factor(char* p, char* &p_next, Poly<C, nvars> & pvalue)
+template<class C>
+int parse_factor(char* p, char* &p_next, Poly<C> & pvalue)
 {
-	Poly<C, nvars> ptemp;
+	int nvars = pvalue.nvars;
+
+	Poly<C> ptemp(nvars);
 	char* pnexttemp;
 	char* pbeg;
 	int symbol;
@@ -223,14 +229,16 @@ int parse_factor(char* p, char* &p_next, Poly<C, nvars> & pvalue)
 
 
 
-template<class C, int nvars>
-int parse_base(char* p, char* & p_next, Poly<C, nvars> & pvalue)
+template<class C>
+int parse_base(char* p, char* & p_next, Poly<C> & pvalue)
 {
 	char* pbeg;
 	char* p_nexttemp;
 	int symbol;
 	long numval;
 	int varindex;
+
+	int nvars = pvalue.nvars;
 
 #ifdef TRACE
 	cout << "Enter base:" << p << endl;
@@ -239,7 +247,7 @@ int parse_base(char* p, char* & p_next, Poly<C, nvars> & pvalue)
 	next_symbol(p, pbeg, p_nexttemp, symbol, numval, varindex);
 
 	if (symbol == SYM_NUMBER) {
-		Poly<C, nvars> pval(numval, 0, 0);
+		Poly<C> pval(numval, 0, 0, nvars);
 		pvalue = pval;
 		p_next = p_nexttemp;
 		return 0;
@@ -256,7 +264,7 @@ int parse_base(char* p, char* & p_next, Poly<C, nvars> & pvalue)
 			return ERR_NO_RPAREN;
 		}
 	} else if (symbol == SYM_VARIABLE) {
-		Poly<C, nvars> pval(1, varindex, 1);
+		Poly<C> pval(1, varindex, 1, nvars);
 		p_next = p_nexttemp;
 		pvalue = pval;
 		return 0;

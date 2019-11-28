@@ -8,7 +8,7 @@
 #include "poly.h"
 #include "streamline.h"
 #include "streamplot.h"
-#include "asxp_arrays.h"
+//#include "asxp_arrays.h"
 #include "pointlist.h"
 
 
@@ -17,69 +17,7 @@ class ProcPoly {
 public:
 
 	ProcPoly(const int arr_size, const int max_rootsa, const int akt_win_sizea,
-			Scale & xrast_to_xa, Scale & yrast_to_ya, Scale & x_to_xrasta, Scale & y_to_yrasta):
-
-		akt_win_size(akt_win_sizea),
-
-		max_roots(max_rootsa),
-
-		xrast_to_x(xrast_to_xa),
-		yrast_to_y(yrast_to_ya),
-
-		x_to_xrast(x_to_xrasta),
-		y_to_yrast(y_to_yrasta),
-
-		z_buf(boost::extents[arr_size][arr_size]),
-		n_buf(boost::extents[arr_size][arr_size]),
-
-
-		zfull_buf(boost::extents[arr_size][arr_size][max_rootsa]),
-		jsel_buf(boost::extents[arr_size][arr_size]),
-		nsel_buf(boost::extents[arr_size][arr_size]),
-
-
-		is_silhouette_mat(boost::extents[arr_size][arr_size]),
-
-		shape_mat_buf(boost::extents[arr_size][arr_size][4]),
-
-		vbase_1_buf(boost::extents[arr_size][arr_size][3]),
-		vbase_2_buf(boost::extents[arr_size][arr_size][3]),
-
-		v1_buf(boost::extents[arr_size][arr_size][2]),
-		v2_buf(boost::extents[arr_size][arr_size][2]),
-
-		l1_buf(boost::extents[arr_size][arr_size]),
-		l2_buf(boost::extents[arr_size][arr_size]),
-
-
-		pz_buf(&z_buf),
-		pn_buf(&n_buf),
-
-
-		pzfull_buf(& zfull_buf),
-		pjsel_buf(&jsel_buf),
-		pnsel_buf(&nsel_buf),
-
-		pis_silhouette_mat(&is_silhouette_mat),
-
-		pshape_mat_buf(& shape_mat_buf),
-
-		pvbase_1_buf(& vbase_1_buf),
-		pvbase_2_buf(& vbase_2_buf),
-
-		pv1_buf(& v1_buf),
-		pv2_buf(& v2_buf),
-
-		pl1_buf(& l1_buf),
-		pl2_buf(& l2_buf),
-
-		streamgen_type(1),
-
-		dsep(10)
-
-
-
-	{};
+			Scale & xrast_to_xa, Scale & yrast_to_ya, Scale & x_to_xrasta, Scale & y_to_yrasta);
 
 	int rotate_mat(double phi, double theta, double psi);
 

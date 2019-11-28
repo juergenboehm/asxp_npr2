@@ -29,9 +29,9 @@ int main(int argc, char* argv[])
 
     // cout << "prep binom done" << endl;
 
-    // print_binom();
+    print_binom();
 
-	//test_unit();
+	test_unit();
 
     eigen_test();
 

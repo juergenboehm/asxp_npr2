@@ -18,11 +18,11 @@ void test_unit_1()
 	char buf[4096];
 	int code = 0;
 
-	Poly5 f;
-	Poly5 g;
-	Poly5 f1;
-	Poly5 f2;
-	Poly5 f3;
+	Poly5 f(5);
+	Poly5 g(5);
+	Poly5 f1(5);
+	Poly5 f2(5);
+	Poly5 f3(5);
 
 	fstream tstfile("test.data");
 
@@ -46,10 +46,11 @@ void test_unit_1()
 		}
 		if (code == 3) { //  f + g
 			f1.read(buf);
+			//cout << "f1 = " << f1 << endl;
 			Poly5 f1c = f1;
 			Poly5 fc = f;
 			fc.add(g);
-			f1c.mul(Poly5(-1,0,0));
+			f1c.mul(Poly5(-1,0,0, 5));
 			f1c.add(fc);
 			cout << "f11 = " << f1c << endl;
 		}
@@ -58,7 +59,7 @@ void test_unit_1()
 			Poly5 f2c = f2;
 			Poly5 fc = f;
 			fc.mul(g);
-			f2c.mul(Poly5(-1,0,0));
+			f2c.mul(Poly5(-1,0,0, 5));
 			f2c.add(fc);
 			cout << "f21 = " << f2c << endl;
 		}
@@ -70,7 +71,7 @@ void test_unit_1()
 			Poly5 gc = g;
 			gc.pow(2);
 			fc.add(gc);
-			fc.mul(Poly5(-1,0,0));
+			fc.mul(Poly5(-1,0,0, 5));
 			fc.add(f3c);
 			cout << "fc = " << fc << endl;
 		}
@@ -85,16 +86,16 @@ void test_unit_1()
 
 void test_unit_2()
 {
-	Poly5 p4;
-	Poly5 p5;
-	Poly5 p6;
+	Poly5 p4(5);
+	Poly5 p5(5);
+	Poly5 p6(5);
 
 	p4.read("(x+y)^5*z^2*a^3*b^4");
 
-    Poly4 p14;
-    Poly3 p13;
-    Poly2 p12;
-    Poly1 p11;
+    Poly4 p14(4);
+    Poly3 p13(3);
+    Poly2 p12(2);
+    Poly1 p11(1);
 
     p4.eval_last(1, p14);
     p14.eval_last(1, p13);
@@ -103,7 +104,7 @@ void test_unit_2()
 
     cout << "(x+1)^5 = " << p11 << endl;
 
-    p4 = Poly5(0,0,0);
+    p4 = Poly5(0,0,0, 5);
 
     int ret = p4.read("x^3 + y^5 + z^4");
 
@@ -113,7 +114,7 @@ void test_unit_2()
     cout << "press key." << endl;
     getchar();
 
-    p4 = Poly5(0,0,0);
+    p4 = Poly5(0,0,0, 5);
 
     ret = p4.read("(a+b)*(x+y)");
 
@@ -134,13 +135,13 @@ void test_unit_2()
 
     getchar();
 
-    p6 = Poly5(0,0,0);
+    p6 = Poly5(0,0,0, 5);
 
     ret = p6.read("x^3+y^3+z^3 + 1 + (-1)*(x+y+z+1)^3");
 
     cout << "clebsch cubic 2 = " << p6 << endl;
 
-    p6.mul(Poly5(-1,0,0));
+    p6.mul(Poly5(-1,0,0, 5));
     p6.add(p5);
 
     cout << "difference = " << p6 << endl;

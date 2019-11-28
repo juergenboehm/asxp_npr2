@@ -20,37 +20,42 @@ using namespace std;
 template< typename A >
 struct Select {};
 
-template< class C, int nvars >
+template< class C>
 class Poly {
 
 public:
 
 	class Term;
 
-	Poly<C, nvars>();
-	Poly<C, nvars>(const C a0, int i, int exp);
-	Poly<C, nvars>(const Term & t0);
-	virtual ~Poly<C,nvars>();
+	Poly<C>();
+	Poly<C>(int nvarsa);
+	Poly<C>(const C a0, int i, int exp, int nvarsa);
+	Poly<C>(const Term & t0);
+	virtual ~Poly<C>();
+
+	Poly<C>(const Poly<C> &) = default;
+
+	Poly<C> & operator=(const Poly<C> & rhs);
 
 	int degree();
 
 	int read(char* poly_str);
 
-	Poly<C,nvars> & add(const Poly<C,nvars> & p);
-	Poly<C, nvars> & term_mult(const Term & tmult, Poly<C, nvars> & q );
-	Poly<C,nvars> & mul(const Poly<C,nvars> & p);
-	Poly<C,nvars> & pow(int e);
+	Poly<C> & add(const Poly<C> & p);
+	Poly<C> & term_mult(const Term & tmult, Poly<C> & q );
+	Poly<C> & mul(const Poly<C> & p);
+	Poly<C> & pow(int e);
 
 
-	Poly<C,nvars> & diff(int i);
+	Poly<C> & diff(int i);
 
 	C eval(const C* vals) const;
-	Poly<C, nvars-1> & eval_last(const C & val, Poly<C, nvars-1> & perg) const;
+	Poly<C> & eval_last(const C & val, Poly<C> & perg) const;
 	int get_z_coef_fast(C* sl, C* coefs) const;
 
-	Poly<C,nvars> & subst(const Poly<C,nvars>* subst_lis);
+	Poly<C> & subst(const Poly<C>* subst_lis);
 
-	Poly<C,nvars> & subst_mat(int ndim, C* subst_mat);
+	Poly<C> & subst_mat(int ndim, C* subst_mat);
 
 	char* sprint(char* buf) const;
 
@@ -59,17 +64,19 @@ public:
 	class Term {
 	public:
 		Term();
-		Term(C a, int i, int expo);
+		Term(int nvarsa);
+
+		Term(C a, int i, int expo, int nvarsa);
 		Term(const Term & tright) {
 			// cout << "Copy Construct Term" << endl;
 			coef = tright.coef;
-			memcpy(expos, tright.expos, nvars*sizeof(int));
+			expos = tright.expos;
 		}
 
 		Term & operator = (const Term & tright) {
 			//cout << "Assigning Term" << endl;
 			coef = tright.coef;
-			memcpy(expos,tright.expos, nvars*sizeof(int));
+			expos = tright.expos;
 			return *this;
 		}
 
@@ -78,7 +85,7 @@ public:
 		int degree() const;
 		bool operator < (const Term & t2) const;
 		void diff(int i);
-		void subst(const Poly<C, nvars> *subst_lis, Poly<C, nvars> & perg);
+		void subst(const Poly<C> *subst_lis, Poly<C> & perg);
 
 		template< typename C1 >
 		int sprintcoefImpl(Select< C1 >, char* buf, bool with_sign) const;
@@ -104,11 +111,14 @@ public:
 
 		int sum_z_coef_fast(C* sl, C* coefs) const;
 
-		typename Poly<C, nvars-1>::Term eval_last(const C & val) const;
+		typename Poly<C>::Term eval_last(const C & val) const;
 
 	public:
 		C coef;
-		int expos[nvars];
+		//int expos[nvars];
+
+
+		vector<int> expos;
 
 	};
 
@@ -119,40 +129,57 @@ public:
 
 	termVec terms;
 
+	int nvars;
+
 };
 
-template< class C, int nvars>
-ostream & operator << (ostream & os, const Poly<C, nvars> & p );
+template< class C>
+ostream & operator << (ostream & os, const Poly<C> & p );
 
 
-
-template< class C, int nvars >
-Poly<C,nvars>::Poly()
+template< class C>
+Poly<C>::Poly(): nvars(0), terms()
 {
 
 }
 
-template< class C, int nvars >
-Poly<C,nvars>::Poly(const C a, int i, int expo)
+template< class C>
+Poly<C>::Poly(int nvarsa) : nvars(nvarsa), terms()
+{
+
+}
+
+template< class C>
+Poly<C>::Poly(const C a, int i, int expo, int nvarsa): nvars(nvarsa)
 {
 	//cerr << "Entering constructor" << endl;
-	terms.push_back(Term(a, i, expo));
+	terms.push_back(Term(a, i, expo, nvarsa));
 	//cerr << "terms.size = " << terms.size() << endl;
 }
 
-template<class C, int nvars>
-Poly<C, nvars>::Poly(const Term & t0)
+template<class C>
+Poly<C>::Poly(const Term & t0): nvars(t0.expos.size())
 {
 	terms.push_back(t0);
 }
 
 
-template< class C, int nvars >
-Poly<C, nvars>::~Poly() {
+template< class C>
+Poly<C>::~Poly() {
 }
 
-template< class C, int nvars >
-int Poly<C, nvars>::degree()
+template< class C>
+Poly<C> & Poly<C>::operator=(const Poly<C> & rhs)
+{
+	nvars = rhs.nvars;
+	terms = rhs.terms;
+
+	return *this;
+}
+
+
+template< class C>
+int Poly<C>::degree()
 {
 	int deg_max = -1;
 	for(vecIt it = terms.begin(); it < terms.end(); ++it) {
@@ -163,14 +190,14 @@ int Poly<C, nvars>::degree()
 }
 
 
-template< class C, int nvars>
-int read_poly(char* poly_str, Poly<C, nvars> & perg);
+template< class C>
+int read_poly(char* poly_str, Poly<C> & perg);
 
 
-template< class C, int nvars>
-int Poly<C, nvars>::read(char* poly_str) {
+template< class C>
+int Poly<C>::read(char* poly_str) {
 
-	int ret = read_poly<C, nvars>(poly_str, *this);
+	int ret = read_poly<C>(poly_str, *this);
 	return ret;
 }
 
@@ -184,8 +211,8 @@ bool check_vector_ordered(vector<T> & termsx)
 }
 
 
-template< class C, int nvars >
-Poly<C,nvars> & Poly<C, nvars>::add(const Poly<C,nvars> & p)
+template< class C>
+Poly<C> & Poly<C>::add(const Poly<C> & p)
 {
 	size_t i = 0;
 	size_t j = 0;
@@ -209,7 +236,7 @@ Poly<C,nvars> & Poly<C, nvars>::add(const Poly<C,nvars> & p)
 			Term tsum;
 			tsum.coef = ti.coef + tj.coef;
 			if (tsum.coef != 0) {
-				memcpy(tsum.expos, ti.expos, sizeof(int) * nvars);
+				tsum.expos = ti.expos;
 				new_terms.push_back(tsum);
 			}
 			++i;
@@ -237,8 +264,8 @@ Poly<C,nvars> & Poly<C, nvars>::add(const Poly<C,nvars> & p)
 
 }
 
-template< class C, int nvars>
-Poly<C, nvars> & Poly<C,nvars>::term_mult(const Term & tmult, Poly<C, nvars> & q )
+template< class C>
+Poly<C> & Poly<C>::term_mult(const Term & tmult, Poly<C> & q )
 {
 	q.terms = terms;
 	size_t i = 0;
@@ -252,12 +279,12 @@ Poly<C, nvars> & Poly<C,nvars>::term_mult(const Term & tmult, Poly<C, nvars> & q
 	return *this;
 }
 
-template< class C, int nvars >
-Poly<C,nvars> & Poly<C, nvars>::mul(const Poly<C,nvars> & p)
+template< class C>
+Poly<C> & Poly<C>::mul(const Poly<C> & p)
 {
 	size_t j = 0;
-	Poly<C, nvars> p_sum_total;
-	Poly<C, nvars> q;
+	Poly<C> p_sum_total(nvars);
+	Poly<C> q(nvars);
 
 	while (j < p.terms.size()) {
 		term_mult(p.terms[j], q);
@@ -271,16 +298,16 @@ Poly<C,nvars> & Poly<C, nvars>::mul(const Poly<C,nvars> & p)
 	return *this;
 }
 
-template< class C, int nvars >
-Poly<C,nvars> & Poly<C, nvars>::pow(int e)
+template< class C>
+Poly<C> & Poly<C>::pow(int e)
 {
 	if (e == 0) {
-		Poly<C, nvars> px(1, 0, 0);
+		Poly<C> px(1, 0, 0, nvars);
 		*this = px;
 		return *this;
 	}
 
-	Poly<C, nvars> px = *this;
+	Poly<C> px = *this;
 	for(int i = 0; i < e - 1; ++i) {
 		mul(px);
 	}
@@ -288,8 +315,8 @@ Poly<C,nvars> & Poly<C, nvars>::pow(int e)
 }
 
 
-template< class C, int nvars >
-Poly<C,nvars> & Poly<C, nvars>::diff(int i)
+template< class C>
+Poly<C> & Poly<C>::diff(int i)
 {
 
 	vecIt j = terms.begin();
@@ -308,8 +335,8 @@ Poly<C,nvars> & Poly<C, nvars>::diff(int i)
 	return *this;
 }
 
-template< class C, int nvars >
-C Poly<C, nvars>::eval(const C* vals) const
+template< class C>
+C Poly<C>::eval(const C* vals) const
 {
 	C sum = 0;
 	for(size_t i = 0; i < terms.size(); ++i) {
@@ -318,19 +345,19 @@ C Poly<C, nvars>::eval(const C* vals) const
 	return sum;
 }
 
-template< class C, int nvars >
-Poly<C, nvars-1> & Poly<C, nvars>::eval_last(const C & val, Poly<C, nvars-1> & perg) const
+template< class C>
+Poly<C> & Poly<C>::eval_last(const C & val, Poly<C> & perg) const
 {
-	perg = Poly<C,nvars-1>(0,0,0);
+	perg = Poly<C>(0,0,0, nvars-1);
 	for(vecItconst it = terms.begin(); it < terms.end(); ++it) {
-		typename Poly<C, nvars-1>::Term t1 = it->eval_last(val);
-		perg.add(Poly<C,nvars-1>(t1));
+		typename Poly<C>::Term t1 = it->eval_last(val);
+		perg.add(Poly<C>(t1));
 	}
 	return perg;
 }
 
-template< class C, int nvars >
-int Poly<C,nvars>::get_z_coef_fast(C* sl, C* coefs) const
+template< class C>
+int Poly<C>::get_z_coef_fast(C* sl, C* coefs) const
 {
 	for(vecItconst it = terms.begin(); it < terms.end(); ++it) {
 		it->sum_z_coef_fast(sl, coefs);
@@ -340,13 +367,13 @@ int Poly<C,nvars>::get_z_coef_fast(C* sl, C* coefs) const
 
 
 
-template< class C, int nvars >
-Poly<C,nvars> & Poly<C, nvars>::subst(const Poly<C,nvars>* subst_list)
+template< class C>
+Poly<C> & Poly<C>::subst(const Poly<C>* subst_list)
 {
 	vecIt it = terms.begin();
-	Poly<C, nvars> psum;
+	Poly<C> psum(nvars);
 	while (it < terms.end()) {
-		Poly<C, nvars> p_it;
+		Poly<C> p_it(nvars);
 		it->subst(subst_list, p_it);
 		psum.add(p_it);
 		//cerr << "psum = " << psum << endl;
@@ -356,32 +383,34 @@ Poly<C,nvars> & Poly<C, nvars>::subst(const Poly<C,nvars>* subst_list)
 	return *this;
 }
 
-template< class C, int nvars >
-Poly<C,nvars> & Poly<C, nvars>::subst_mat(int ndim, C* subst_mat)
+
+template< class C>
+Poly<C> & Poly<C>::subst_mat(int ndim, C* subst_mat)
 {
-	Poly<C, nvars> psubsl[nvars];
+	Poly<C> psubsl[nvars];
 
 	for(int i = 0; i < ndim; ++i) {
-		Poly<C, nvars> psum;
+		Poly<C> psum(nvars);
 
 		for(int j = 0; j < ndim; ++j) {
 			int ind_ij = i * ndim + j;
 
-			Poly<C,nvars> pacterm(subst_mat[ind_ij], j, 1);
+			Poly<C> pacterm(subst_mat[ind_ij], j, 1, nvars);
 			psum.add(pacterm);
 
 		}
 		psubsl[i] = psum;
 	}
 	for(int i = ndim; i < nvars; ++i) {
-		psubsl[i] = Poly<C,nvars>(1,i,1);
+		psubsl[i] = Poly<C>(1,i,1, nvars);
 	}
 	return subst(psubsl);
 }
 
 
-template< class C, int nvars >
-char* Poly<C, nvars>::sprint(char* buf) const
+
+template< class C>
+char* Poly<C>::sprint(char* buf) const
 {
 	char* p = buf;
 	int tlen = terms.size();
@@ -403,15 +432,15 @@ char* Poly<C, nvars>::sprint(char* buf) const
 	if (tlen > 0) {
 		p = terms[tlen-1].sprint(p);
 	} else {
-		Term a(0,0,0);
+		Term a(0,0,0, nvars);
 		nc = a.sprintcoef(p, 0);
 		p += nc;
 	}
 	return p;
 }
 
-template< class C, int nvars>
-ostream & operator << (ostream & os, const Poly<C, nvars> & p ) {
+template< class C>
+ostream & operator << (ostream & os, const Poly<C> & p ) {
 	char buf[2048];
 	p.sprint(buf);
 	os << buf;
@@ -419,18 +448,29 @@ ostream & operator << (ostream & os, const Poly<C, nvars> & p ) {
 }
 
 
-template< class C, int nvars >
-Poly<C,nvars>::Term::Term() {
+template< class C>
+Poly<C>::Term::Term() {
 	coef = 0;
-	for(int i = 0; i < nvars; ++i) {
+//	for(int i = 0; i < nvars; ++i) {
+//		expos[i] = 0;
+//	}
+}
+
+template< class C>
+Poly<C>::Term::Term(int nvarsa) {
+	coef = 0;
+	expos.resize(nvarsa);
+	for(int i = 0; i < nvarsa; ++i) {
 		expos[i] = 0;
 	}
 }
 
-template< class C, int nvars >
-Poly<C,nvars>::Term::Term(C a0, int i, int expo) {
+
+template< class C>
+Poly<C>::Term::Term(C a0, int i, int expo, int nvarsa) {
 	coef = a0;
-	for(int j = 0; j < nvars; ++j) {
+	expos.resize(nvarsa);
+	for(int j = 0; j < nvarsa; ++j) {
 		expos[j] = 0;
 	}
 	expos[i] = expo;
@@ -438,14 +478,15 @@ Poly<C,nvars>::Term::Term(C a0, int i, int expo) {
 }
 
 
-template< class C, int nvars >
-Poly<C, nvars>::Term::~Term() {
+template< class C>
+Poly<C>::Term::~Term() {
 
 }
 
-template< class C, int nvars >
-int Poly<C, nvars>::Term::degree () const
+template< class C>
+int Poly<C>::Term::degree () const
 {
+	int nvars = expos.size();
 
 	int d = 0;
 	for(int i = 0; i < nvars; ++i) {
@@ -454,8 +495,10 @@ int Poly<C, nvars>::Term::degree () const
 	return d;
 }
 
-template< class C, int nvars >
-bool Poly<C, nvars>::Term::operator < (const Poly<C, nvars>::Term & t) const {
+template< class C>
+bool Poly<C>::Term::operator < (const Poly<C>::Term & t) const {
+
+	int nvars = expos.size();
 
 	int d = degree();
 	int d1 = t.degree();
@@ -477,68 +520,72 @@ bool Poly<C, nvars>::Term::operator < (const Poly<C, nvars>::Term & t) const {
 }
 
 
-template< class C, int nvars >
-void Poly<C, nvars>::Term::diff(int i) {
+template< class C>
+void Poly<C>::Term::diff(int i) {
 	coef *= expos[i];
 	expos[i]--;
 }
 
-template< class C, int nvars >
-void Poly<C, nvars>::Term::subst(const Poly<C, nvars> *subst_lis, Poly<C, nvars> & perg) {
+template< class C>
+void Poly<C>::Term::subst(const Poly<C> *subst_lis, Poly<C> & perg) {
 
-	Poly<C, nvars>p(coef,0,0);
+	int nvars = expos.size();
+
+	Poly<C>p(coef,0,0, nvars);
 	for(int i = 0; i < nvars; ++i) {
-		Poly<C,nvars> pvari = subst_lis[i];
+		Poly<C> pvari = subst_lis[i];
 		pvari.pow(expos[i]);
 		p.mul(pvari);
 	}
 	perg = p;
 }
 
-template<class C, int nvars>
+template<class C>
 template< typename C1 >
-int Poly<C, nvars>::Term::sprintcoefImpl(Select< C1 >, char* buf, bool with_sign) const
+int Poly<C>::Term::sprintcoefImpl(Select< C1 >, char* buf, bool with_sign) const
 {
 	return 0;
 }
 
-template<class C, int nvars>
-int Poly<C,nvars>::Term::sprintcoefImpl(Select< double >, char* buf, bool with_sign) const
+template<class C>
+int Poly<C>::Term::sprintcoefImpl(Select< double >, char* buf, bool with_sign) const
 {
 	double cf = with_sign ? coef : fabs(coef);
 	return sprintf(buf, "%.2f", cf);
 }
 
-template<class C, int nvars>
-int Poly<C,nvars>::Term::sprintcoef(char* buf, bool with_sign) const
+template<class C>
+int Poly<C>::Term::sprintcoef(char* buf, bool with_sign) const
 {
 	return sprintcoefImpl(Select<C>(), buf, with_sign);
 }
 
-template<class C, int nvars>
+template<class C>
 template< typename C1 >
-C Poly<C,nvars>::Term::powxImpl(Select<C1>, C val, int x) const
+C Poly<C>::Term::powxImpl(Select<C1>, C val, int x) const
 {
 	return val;
 }
 
-template<class C, int nvars>
-double Poly<C,nvars>::Term::powxImpl(Select<double>, double val, int x) const
+template<class C>
+double Poly<C>::Term::powxImpl(Select<double>, double val, int x) const
 {
 	return ::pow(val, x);
 }
 
-template<class C, int nvars>
-C Poly<C,nvars>::Term::powx(C val, int x) const
+template<class C>
+C Poly<C>::Term::powx(C val, int x) const
 {
 	return powxImpl(Select<C>(), val, x);
 }
 
 
 
-template< class C, int nvars >
-char* Poly<C, nvars>::Term::sprint(char* buf) const
+template< class C>
+char* Poly<C>::Term::sprint(char* buf) const
 {
+	int nvars = expos.size();
+
 	const char* vars = "xyzabcdefgh";
     char* pout = buf;
 	int nchar = sprintcoef(pout, false);
@@ -562,22 +609,33 @@ char* Poly<C, nvars>::Term::sprint(char* buf) const
 	return pout;
 }
 
-template< class C, int nvars >
-bool Poly<C, nvars>::Term::same_monom(const Term & t1) {
-	return memcmp(expos, t1.expos, sizeof(int) * nvars ) == 0;
+template< class C>
+bool Poly<C>::Term::same_monom(const Term & t1) {
+	bool erg = true;
+	for(size_t i = 0; i < expos.size(); ++i) {
+		if (expos[i] != t1.expos[i]) {
+			erg = false;
+			break;
+		}
+	}
+	return erg;
 }
 
 
-template< class C, int nvars >
-void Poly<C, nvars>::Term::mult(const Term & t1) {
+template< class C>
+void Poly<C>::Term::mult(const Term & t1) {
+	int nvars = expos.size();
+
 	for(int i = 0; i < nvars; ++i) {
 		expos[i] += t1.expos[i];
 	}
 	coef *= t1.coef;
 }
 
-template< class C, int nvars >
-C Poly<C, nvars>::Term::eval(const C* vals) const {
+template< class C>
+C Poly<C>::Term::eval(const C* vals) const {
+	int nvars = expos.size();
+
 	C val = coef;
 	for(int i = 0; i < nvars; ++i) {
 		val *= powx(vals[i], expos[i]);
@@ -585,9 +643,12 @@ C Poly<C, nvars>::Term::eval(const C* vals) const {
 	return val;
 }
 
-template< class C, int nvars >
-typename Poly<C, nvars-1>::Term Poly<C, nvars>::Term::eval_last(const C & val) const {
-	typename Poly<C,nvars-1>::Term t1;
+template< class C>
+typename Poly<C>::Term Poly<C>::Term::eval_last(const C & val) const {
+
+	int nvars = expos.size();
+
+	typename Poly<C>::Term t1(nvars-1);
 	for(int i = 0; i < nvars - 1; ++i) {
 		t1.expos[i] = expos[i];
 	}
@@ -595,9 +656,11 @@ typename Poly<C, nvars-1>::Term Poly<C, nvars>::Term::eval_last(const C & val) c
 	return t1;
 }
 
-template< class C, int nvars >
-int Poly<C,nvars>::Term::sum_z_coef_fast(C* sl, C* coefs) const
+template< class C>
+int Poly<C>::Term::sum_z_coef_fast(C* sl, C* coefs) const
 {
+	int nvars = expos.size();
+
 	C prod = coef;
 	for(int i = 0; i < nvars - 1; ++i ) {
 		prod *= powx(sl[i], expos[i]);
@@ -607,11 +670,11 @@ int Poly<C,nvars>::Term::sum_z_coef_fast(C* sl, C* coefs) const
 }
 
 
-typedef Poly<double, 1> Poly1;
-typedef Poly<double, 2> Poly2;
-typedef Poly<double, 3> Poly3;
-typedef Poly<double, 4> Poly4;
-typedef Poly<double, 5> Poly5;
+typedef Poly<double> Poly1;
+typedef Poly<double> Poly2;
+typedef Poly<double> Poly3;
+typedef Poly<double> Poly4;
+typedef Poly<double> Poly5;
 
 
 
