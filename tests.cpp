@@ -15,6 +15,7 @@ using namespace std;
 
 void test_unit_1()
 {
+
 	char buf[4096];
 	int code = 0;
 
@@ -162,8 +163,30 @@ void test_unit_2()
 
 }
 
-void test_unit()
+void test_unit_3(std::string line)
 {
+	cout << "Test Lexer:" << endl;
+
+	lexer_test_fun(line);
+
+	cout << "Press key." << endl;
+
+	getchar();
+
+
+	cout << "Test Parser:" << endl;
+
+	parser_test_fun(line);
+
+	cout << "Press key." << endl;
+
+	getchar();
+}
+
+void test_unit(std::string line)
+{
+	test_unit_3(line);
+
 	test_unit_1();
 	test_unit_2();
 

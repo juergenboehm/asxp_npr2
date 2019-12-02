@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <string>
+
 #include "mainwindow.h"
 #include "asxp.h"
 #include "roots.h"
@@ -31,7 +33,10 @@ int main(int argc, char* argv[])
 
     print_binom();
 
-	test_unit();
+    if (argc > 1) {
+
+    	test_unit(string(argv[1]));
+    }
 
     eigen_test();
 

@@ -2,6 +2,8 @@
 #ifndef __parser_h
 #define __parser_h
 
+#include <string>
+
 #include <assert.h>
 
 #include "poly.h"
@@ -14,33 +16,138 @@
 #define SYM_PLUS 10
 #define SYM_MINUS 11
 #define SYM_TIMES 12
-#define SYM_EXPO 13
+#define SYM_DIVIDE 13
+#define SYM_EXPO 14
 
 #define SYM_LPAREN 20
 #define SYM_RPAREN 21
 #define SYM_SEMICOLON 30
 
-#define SYM_NUMBER 40
-#define SYM_VARIABLE 41
+#define SYM_INTEGER 40
+#define SYM_DOUBLE 41
+#define SYM_NUMBER 42
+
+#define SYM_VARIABLE 43
+
+#define SYM_EOF	50
+
+#define SYM_ERR	100
 
 #define ERR_NUM_AFTER_EXPO 10
 #define ERR_NO_RPAREN 11
+#define ERR_BASE_MALFORMED	12
 
-int next_symbol(char* p_start, char * & p_sym_beg, char* & p_sym_next, int & symbol,
-		long & numval, int & varindex );
 
-template<class C>
-int parse_expression(char* p, char* & p_next, Poly<C> & pvalue);
 
-template<class C>
-int parse_term(char* p, char* & p_next, Poly<C> & pvalue);
+class GetchClass {
 
-template<class C>
-int parse_factor(char* p, char* & p_next, Poly<C> &  pvalue);
+public:
 
-template<class C>
-int parse_base(char* p, char* & p_next, Poly<C> & pvalue);
+	virtual ~GetchClass(){};
 
+	virtual char operator()(int & is_end) = 0;
+
+	virtual void advance() = 0;
+
+};
+
+
+class GetchString: public GetchClass {
+
+public:
+
+		GetchString(std::string sa): s(sa), pos(0) {};
+		virtual ~GetchString() {};
+
+		virtual char operator()(int & is_end) {
+			if (pos == s.length()) {
+				is_end = 1;
+				return 255;
+			}
+			is_end = 0;
+			return s[pos];
+		}
+
+		virtual void advance() {
+			if (pos < s.length()) {
+				++pos;
+			}
+		};
+
+	private:
+
+		std::string s;
+		size_t pos;
+
+
+};
+
+class Token {
+
+public:
+
+	Token(): sym_code(0), ident(""), vald(0.0), vali(0) {};
+
+	Token(int sym_codea, std::string identa, double valda, int valia):
+		sym_code(sym_codea), ident(identa), vald(valda), vali(valia) {};
+
+	Token(int sym_codea, std::string identa):
+		sym_code(sym_codea), ident(identa), vald(0.0), vali(0) {};
+
+	int sym_code;
+
+	std::string ident;
+	double vald;
+	int vali;
+
+};
+
+template<class Tok>
+class Lexer {
+
+public:
+
+	typedef Tok (*token_fun)(std::string);
+
+	struct lex_table_line_s {
+
+		int state;
+		std::string init_str;
+		int new_state;
+		int action;
+
+		token_fun tok_fun;
+
+	};
+
+	typedef struct lex_table_line_s lex_table_line_t;
+
+
+	Lexer(vector<lex_table_line_t> & lex_tbla): lex_tbl(lex_tbla), pgetch(0), lex_state(0), text_buf("") {};
+
+	void init(GetchClass & getcha, int lex_inita) {
+		pgetch = &getcha;
+		lex_state = lex_inita;
+		text_buf = "";
+	}
+
+	Tok getsym();
+
+private:
+
+	vector<lex_table_line_t> & lex_tbl;
+	GetchClass* pgetch;
+
+	int lex_state;
+
+	std::string text_buf;
+
+
+};
+
+
+void parser_test_fun(std::string line);
+void lexer_test_fun(std::string line);
 
 // grammar is
 //
@@ -50,229 +157,175 @@ int parse_base(char* p, char* & p_next, Poly<C> & pvalue);
 // base = variable | (expression) | number
 //
 
+
+template<class T>
+class ParserExpr {
+
+public:
+
+	ParserExpr(Lexer<Token> & lexa): lex(lexa) {};
+
+	int parse_init() { akt_sym = lex.getsym(); return 0; }
+
+	int parse_expression(T & pvalue);
+	int parse_term(T & value);
+	int parse_factor(T & pvalue);
+	int parse_base(T & value);
+
+	Lexer<Token>& lex;
+
+	Token akt_sym;
+
+};
+
+#ifdef TEST_PARSER
+
+class DoubleExpr {
+
+public:
+
+	DoubleExpr(): val(0.0) {};
+
+	DoubleExpr & pre_init(DoubleExpr & a) { return *this; };
+
+	DoubleExpr & set_ident(std::string s ) {
+		val = 0;
+		if (s == "x") {
+			val = 2;
+		}
+		if (s == "y") {
+			val = 5;
+		}
+		return *this;
+	};
+
+	DoubleExpr & set_double(double vala) {
+		val = vala;
+		return *this;
+	}
+
+	DoubleExpr & add(DoubleExpr & a) {
+		val += a.val;
+		return *this;
+	};
+
+	DoubleExpr & mul(DoubleExpr & a) {
+		val *= a.val;
+		return *this;
+	};
+
+	DoubleExpr & pow(int d) {
+		std::cout << "val = " << val << " pow: d =" << d << std::endl;
+		val = exp(d * log(val));
+		return *this;
+	}
+
+	DoubleExpr & neg() {
+		val = -val;
+		return *this;
+	}
+
+	double val;
+
+};
+
+#endif
+
+class PolyExpr {
+
+public:
+
+	PolyExpr(): vars(), poly() {};
+
+	PolyExpr & set_ident(std::string idstr) {
+		for(size_t i = 0; i < vars.size(); ++i) {
+			if (idstr == vars[i]) {
+				poly = Poly<double>(1, i, 1, vars.size());
+				return *this;
+			}
+		}
+		poly = Poly<double>(1, 0, 0, vars.size());
+		return *this;
+	}
+
+	PolyExpr& set_double(double val) {
+		poly = Poly<double>(val, 0, 0, vars.size());
+		return *this;
+	}
+
+	PolyExpr & pre_init(PolyExpr & a) {
+		vars = a.vars;
+		return *this;
+	}
+
+	void set_vars(std::string varstr) {
+		for(size_t i = 0; i < varstr.size(); ++i) {
+			vars.push_back(std::string(1,varstr[i]));
+		}
+	}
+
+	PolyExpr & add(PolyExpr & a) {
+		poly.add(a.poly);
+		return *this;
+	}
+
+	PolyExpr & mul(PolyExpr & a) {
+		poly.mul(a.poly);
+		return *this;
+	}
+
+	PolyExpr & pow(int d) {
+		poly.pow(d);
+		return *this;
+	}
+
+	PolyExpr & neg() {
+		poly.mul(Poly<double>(-1, 0, 0, vars.size()));
+		return *this;
+	}
+
+
+	vector<std::string> vars;
+
+	Poly<double> poly;
+};
+
+
+extern vector<Lexer<Token>::lex_table_line_t> ltbl;
+
 template< class C>
 int read_poly(char* poly_str, Poly<C> & perg)
 {
-	char *p_next;
-	parse_expression(poly_str, p_next, perg);
+	GetchClass* p_getch = new GetchString(std::string(poly_str));
+	Lexer<Token> lex(ltbl);
 
-	return 0;
-}
+	ParserExpr<PolyExpr> parse_poly(lex);
 
-template<class C>
-int parse_expression(char* p, char* & p_next, Poly<C>  & pvalue)
-{
-	int nvars = pvalue.nvars;
+	lex.init(*p_getch, 0);
 
-	Poly<C> ptemp(nvars);
-	char* pnexttemp;
-	char* pbeg;
-	int symbol;
-	long numval;
-	int varindex;
-	bool first_minus = false;
+	PolyExpr res;
 
-#ifdef TRACE
-	cout << "Enter expression:" << p << endl;
-#endif
+	std::string varstr = "xyzabcdefg";
 
-	next_symbol(p, pbeg, pnexttemp, symbol, numval, varindex);
+	varstr = varstr.substr(0, perg.nvars);
 
-	if (symbol == SYM_PLUS) {
-		p = pnexttemp;
-	} else if (symbol == SYM_MINUS) {
-		p = pnexttemp;
-		first_minus = true;
+	res.set_vars(varstr);
+
+	parse_poly.parse_init();
+	int err = parse_poly.parse_expression(res);
+
+	assert(err == 0);
+
+	if (!err) {
+		perg = res.poly;
 	};
 
-	parse_term(p, p_next, ptemp);
-
-	if (first_minus) {
-		ptemp.mul(Poly<C>(-1,0,0, nvars));
-	}
-
-#ifdef TRACE
-	cout << "term start" << ptemp << endl;
-#endif
-
-	p = p_next;
-
-	do {
-
-		next_symbol(p, pbeg, pnexttemp, symbol, numval, varindex);
-
-		if (symbol == SYM_PLUS || symbol == SYM_MINUS) {
-			p = pnexttemp;
-			Poly<C> ptemp1(nvars);
-			parse_term(p, pnexttemp, ptemp1);
-			if (symbol == SYM_MINUS) {
-				ptemp1.mul(Poly<C>(-1,0,0, nvars));
-			}
-#ifdef TRACE
-			cout << "term follow = " << ptemp1 << endl;
-#endif
-			ptemp.add(ptemp1);
-			p = pnexttemp;
-		} else {
-			p_next = p;
-			pvalue = ptemp;
-			return 0;
-		}
-
-	} while (1);
+	delete p_getch;
 
 	return 0;
 }
 
 
-template<class C>
-int parse_term(char* p, char* & p_next, Poly<C> & pvalue)
-{
-	int nvars = pvalue.nvars;
-
-	Poly<C> ptemp(nvars);
-	char* pnexttemp;
-	char* pbeg;
-	int symbol;
-	long numval;
-	int varindex;
-
-#ifdef TRACE
-	cout << "Enter term:" << p << endl;
-#endif
-
-	parse_factor(p, p_next, ptemp);
-
-#ifdef TRACE
-	cout << "factor start:" << ptemp << endl;
-#endif
-
-	p = p_next;
-
-	do {
-
-		next_symbol(p, pbeg, pnexttemp, symbol, numval, varindex);
-
-		if (symbol == SYM_TIMES) {
-			p = pnexttemp;
-			Poly<C> ptemp1(nvars);
-			parse_factor(p, pnexttemp, ptemp1);
-
-#ifdef TRACE
-			cout << "factor follow: " << ptemp1 << endl;
-#endif
-
-			ptemp.mul(ptemp1);
-			p = pnexttemp;
-
-
-		} else {
-			p_next = p;
-			pvalue = ptemp;
-			return 0;
-		}
-
-	} while (1);
-
-	return 0;
-}
-
-template<class C>
-int parse_factor(char* p, char* &p_next, Poly<C> & pvalue)
-{
-	int nvars = pvalue.nvars;
-
-	Poly<C> ptemp(nvars);
-	char* pnexttemp;
-	char* pbeg;
-	int symbol;
-	long numval;
-	int varindex;
-
-#ifdef TRACE
-	cout << "Enter factor:" << p << endl;
-#endif
-
-	parse_base(p, pnexttemp, ptemp);
-
-#ifdef TRACE
-	cout << "base start:" << ptemp << endl;
-#endif
-
-	p = pnexttemp;
-
-	next_symbol(p, pbeg, pnexttemp, symbol, numval, varindex);
-
-	if (symbol == SYM_EXPO) {
-		p = pnexttemp;
-		next_symbol(p, pbeg, pnexttemp, symbol, numval, varindex);
-		if (symbol == SYM_NUMBER) {
-			ptemp.pow(numval);
-
-#ifdef TRACE
-			cout << "varindex = " << varindex << " expo = " << numval << endl;
-			cout << "++++++ base full = " << ptemp << endl;
-#endif
-			p_next = pnexttemp;
-			pvalue = ptemp;
-			return 0;
-		} else {
-			assert(0);
-			return ERR_NUM_AFTER_EXPO;
-		}
-	} else {
-		p_next = p;
-		pvalue = ptemp;
-		return 0;
-	}
-}
-
-
-
-template<class C>
-int parse_base(char* p, char* & p_next, Poly<C> & pvalue)
-{
-	char* pbeg;
-	char* p_nexttemp;
-	int symbol;
-	long numval;
-	int varindex;
-
-	int nvars = pvalue.nvars;
-
-#ifdef TRACE
-	cout << "Enter base:" << p << endl;
-#endif
-
-	next_symbol(p, pbeg, p_nexttemp, symbol, numval, varindex);
-
-	if (symbol == SYM_NUMBER) {
-		Poly<C> pval(numval, 0, 0, nvars);
-		pvalue = pval;
-		p_next = p_nexttemp;
-		return 0;
-	} else if (symbol == SYM_LPAREN) {
-		p = p_nexttemp;
-		parse_expression(p, p_nexttemp, pvalue);
-		p = p_nexttemp;
-		next_symbol(p, pbeg, p_nexttemp, symbol, numval, varindex);
-		if (symbol == SYM_RPAREN) {
-			p_next = p_nexttemp;
-			return 0;
-		} else {
-			assert(0);
-			return ERR_NO_RPAREN;
-		}
-	} else if (symbol == SYM_VARIABLE) {
-		Poly<C> pval(1, varindex, 1, nvars);
-		p_next = p_nexttemp;
-		pvalue = pval;
-		return 0;
-	} else {
-		assert(0);
-	}
-	return 0;
-}
 
 
 
