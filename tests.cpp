@@ -9,6 +9,8 @@
 #include "poly.h"
 #include "parser.h"
 
+#include "expr.h"
+
 #include "tests.h"
 
 using namespace std;
@@ -185,6 +187,17 @@ void test_unit_3(std::string line)
 
 void test_unit(std::string line)
 {
+
+	if (1)
+	{
+		test_expr_1(line);
+
+		cout << "Press key" << endl;
+
+		getchar();
+	}
+
+
 	test_unit_3(line);
 
 	test_unit_1();

@@ -25,6 +25,8 @@ HEADERS += tests.h
 HEADERS += timing.h
 HEADERS += triangularize.h
 HEADERS += procpoly.h
+HEADERS += expr.h
+HEADERS += parserex.h
 
 SOURCES += asxp.cpp
 SOURCES += clipper.cpp
@@ -48,6 +50,8 @@ SOURCES += tests.cpp
 SOURCES += timing.cpp
 SOURCES += triangularize.cpp
 SOURCES += procpoly.cpp
+SOURCES += expr.cpp
+SOURCES += parserex.cpp
 
 
 TARGET = asxp

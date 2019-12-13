@@ -735,7 +735,13 @@ void Window::selectSurf(int sel_ind)
 		++cnt;
 	}
 
+	cout << "selectSurf: f5 = " << f5str.toStdString() << endl;
+
 	pp.init_f5(f5str);
+
+	cout << "selectSurf: pp.f5 = " << pp.f5 << endl;
+
+	cout << "selectSurf: init_f5 done." << endl;
 
 	screen_main->colmat_valid = false;
 	screen_main->refresh();

@@ -3,6 +3,7 @@
 
 #include <QMap>
 #include <QList>
+#include <QString>
 
 
 class InputData {

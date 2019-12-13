@@ -3,6 +3,7 @@
 #define __poly_h_
 
 #include <iostream>
+#include <string>
 
 #include <vector>
 
@@ -16,9 +17,6 @@
 
 using namespace std;
 
-
-template< typename A >
-struct Select {};
 
 template< class C>
 class Poly {
@@ -39,7 +37,7 @@ public:
 
 	int degree();
 
-	int read(char* poly_str);
+	int read(std::string poly_str);
 
 	Poly<C> & add(const Poly<C> & p);
 	Poly<C> & term_mult(const Term & tmult, Poly<C> & q );
@@ -58,6 +56,8 @@ public:
 	Poly<C> & subst_mat(int ndim, C* subst_mat);
 
 	char* sprint(char* buf) const;
+
+	std::string to_str() const;
 
 
 public:
@@ -87,19 +87,13 @@ public:
 		void diff(int i);
 		void subst(const Poly<C> *subst_lis, Poly<C> & perg);
 
-		template< typename C1 >
-		int sprintcoefImpl(Select< C1 >, char* buf, bool with_sign) const;
-
-		int sprintcoefImpl(Select< double >, char* buf, bool with_sign) const;
-
 		int sprintcoef(char* buf, bool with_sign) const;
 
 		char* sprint(char* buf) const;
 
-		template< typename C1 >
-		C powxImpl(Select<C1>, C val, int x) const;
+		std::string to_str() const;
 
-		double powxImpl(Select<double>, double val, int x) const;
+		std::string to_str_coef(bool with_sign) const;
 
 		C powx(C val, int x) const;
 
@@ -195,7 +189,7 @@ int read_poly(char* poly_str, Poly<C> & perg);
 
 
 template< class C>
-int Poly<C>::read(char* poly_str) {
+int Poly<C>::read(std::string poly_str) {
 
 	int ret = read_poly<C>(poly_str, *this);
 	return ret;
@@ -440,10 +434,37 @@ char* Poly<C>::sprint(char* buf) const
 }
 
 template< class C>
+std::string Poly<C>::to_str() const {
+	size_t tlen = terms.size();
+
+	std::string res = "(" +std::to_string(tlen) + "):";
+
+	for(size_t i = 0; i < tlen; ++i) {
+		if (terms[i].coef < 0) {
+			res = res + " - ";
+		} else if (i > 0) {
+			res = res + " + ";
+		}
+		res = res + terms[i].to_str();
+	}
+
+	if (tlen == 0) {
+		Term a(0,0,0, nvars);
+		res += a.to_str();
+	}
+
+	return res;
+}
+
+template< class C>
 ostream & operator << (ostream & os, const Poly<C> & p ) {
+#ifdef OLD_POLY_OUT
 	char buf[2048];
 	p.sprint(buf);
 	os << buf;
+#else
+	os << p.to_str();
+#endif
 	return os;
 }
 
@@ -540,45 +561,39 @@ void Poly<C>::Term::subst(const Poly<C> *subst_lis, Poly<C> & perg) {
 	perg = p;
 }
 
+// the following members are generic and not intended to be implemented
+// the implementations are for template specializations and to be found in poly.cpp
+// (they are done for C = double there).
+
+
+#if 0
 template<class C>
-template< typename C1 >
-int Poly<C>::Term::sprintcoefImpl(Select< C1 >, char* buf, bool with_sign) const
+int Poly<C>::Term::sprintcoef(char* buf, bool with_sign) const
 {
 	return 0;
 }
 
-template<class C>
-int Poly<C>::Term::sprintcoefImpl(Select< double >, char* buf, bool with_sign) const
-{
-	double cf = with_sign ? coef : fabs(coef);
-	return sprintf(buf, "%.2f", cf);
-}
+#endif
+
+#if 0
 
 template<class C>
-int Poly<C>::Term::sprintcoef(char* buf, bool with_sign) const
+std::string Poly<C>::Term::to_str_coef(bool with_sign) const
 {
-	return sprintcoefImpl(Select<C>(), buf, with_sign);
+	return "";
 }
 
-template<class C>
-template< typename C1 >
-C Poly<C>::Term::powxImpl(Select<C1>, C val, int x) const
-{
-	return val;
-}
+#endif
 
-template<class C>
-double Poly<C>::Term::powxImpl(Select<double>, double val, int x) const
-{
-	return ::pow(val, x);
-}
 
+
+#if 0
 template<class C>
 C Poly<C>::Term::powx(C val, int x) const
 {
-	return powxImpl(Select<C>(), val, x);
+	return 0;
 }
-
+#endif
 
 
 template< class C>
@@ -608,6 +623,27 @@ char* Poly<C>::Term::sprint(char* buf) const
 	}
 	return pout;
 }
+
+template< class C>
+std::string Poly<C>::Term::to_str() const
+{
+	int nvars = expos.size();
+	std::string vars = "xyzabcdefgh";
+
+	std::string res = to_str_coef(false);
+
+	for(int i = 0; i < nvars; ++i) {
+		if (expos[i] == 1) {
+			res = res + " * " + vars[i];
+		} else if ( expos[i] > 1) {
+			res = res + " * " + vars[i] + "^" + std::to_string(expos[i]);
+		}
+	}
+
+	return res;
+
+}
+
 
 template< class C>
 bool Poly<C>::Term::same_monom(const Term & t1) {

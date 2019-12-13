@@ -33,7 +33,7 @@
 
 #define ALPHA_STR "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define DIGIT_STR	"0123456789"
-#define SYMCHAR_STR "+-*/^()"
+#define SYMCHAR_STR "+-*/^();,=[]."
 
 
 Token tokenize_ident(std::string idstr)
@@ -58,6 +58,18 @@ Token tokenize_symchar(std::string idstr)
 	case '(':	sym = SYM_LPAREN;
 				break;
 	case ')':	sym = SYM_RPAREN;
+				break;
+	case ';':	sym = SYM_SEMICOLON;
+				break;
+	case ',': 	sym = SYM_COMMA;
+				break;
+	case '=':	sym = SYM_EQUAL;
+				break;
+	case '[':	sym = SYM_LBRACKET;
+				break;
+	case ']':	sym = SYM_RBRACKET;
+				break;
+	case '.':	sym = SYM_PERIOD;
 				break;
 	default:	sym = 0;
 	}
@@ -228,12 +240,12 @@ void parser_test_fun(std::string line)
 {
 	std::cout << "line = " << line << std::endl;
 
-	GetchClass* p = new GetchString(line);
+	std::unique_ptr<GetchClass> p_getch (new GetchString(line));
 	Lexer<Token> lex(ltbl);
 
 	ParserExpr<PolyExpr> parse_poly(lex);
 
-	lex.init(*p, 0);
+	lex.init(*p_getch, 0);
 
 	PolyExpr res;
 
@@ -244,219 +256,9 @@ void parser_test_fun(std::string line)
 
 	std::cout << "result = " << res.poly << std::endl;
 
-	delete p;
 }
 
 
-template< class T>
-int ParserExpr<T>::parse_expression(T & pvalue)
-{
-
-	T ptemp;
-
-	ptemp.pre_init(pvalue);
-
-	bool first_minus = false;
-
-	if (akt_sym.sym_code == SYM_PLUS) {
-		akt_sym = lex.getsym();
-	} else if (akt_sym.sym_code == SYM_MINUS) {
-		akt_sym = lex.getsym();
-		first_minus = true;
-	};
-
-	int err = parse_term(ptemp);
-
-	if (err) {
-		return err;
-	}
-
-	if (first_minus) {
-		ptemp.neg();
-	}
-
-
-	do {
-
-		if (akt_sym.sym_code == SYM_PLUS || akt_sym.sym_code == SYM_MINUS) {
-
-			bool is_minus = (akt_sym.sym_code == SYM_MINUS);
-
-			T ptemp1;
-
-			ptemp1.pre_init(pvalue);
-
-			akt_sym = lex.getsym();
-
-			int err = parse_term(ptemp1);
-
-			if (err) {
-				return err;
-			}
-
-			if (is_minus) {
-				ptemp1.neg();
-			}
-
-			ptemp.add(ptemp1);
-
-		} else {
-
-			pvalue = ptemp;
-
-			return 0;
-		}
-
-	} while (1);
-
-	pvalue = ptemp;
-
-	return 0;
-}
-
-
-template<class T>
-int ParserExpr<T>::parse_term(T & pvalue)
-{
-
-	T ptemp;
-
-	ptemp.pre_init(pvalue);
-
-	int err = parse_factor(ptemp);
-
-	if (err) {
-		return err;
-	}
-
-	do {
-
-		if (akt_sym.sym_code == SYM_TIMES) {
-
-			akt_sym = lex.getsym();
-
-			T ptemp1;
-
-			ptemp1.pre_init(pvalue);
-
-			int err = parse_factor(ptemp1);
-
-			if (err) {
-				return err;
-			}
-
-			ptemp.mul(ptemp1);
-
-		} else {
-			pvalue = ptemp;
-			return 0;
-		}
-
-	} while (1);
-
-	pvalue = ptemp;
-
-	return 0;
-}
-
-template<class T>
-int ParserExpr<T>::parse_factor(T & pvalue)
-{
-
-	T ptemp;
-
-	ptemp.pre_init(pvalue);
-
-	int err = parse_base(ptemp);
-
-	if (err) {
-		return err;
-	}
-
-	if (akt_sym.sym_code == SYM_EXPO) {
-
-		akt_sym = lex.getsym();
-
-		if (akt_sym.sym_code == SYM_INTEGER) {
-
-			ptemp.pow(akt_sym.vali);
-
-			akt_sym = lex.getsym();
-
-
-			pvalue = ptemp;
-			return 0;
-
-		} else {
-
-			assert(0);
-			return ERR_NUM_AFTER_EXPO;
-		}
-	} else {
-
-		pvalue = ptemp;
-
-		return 0;
-
-	}
-}
-
-
-
-template<class T>
-int ParserExpr<T>::parse_base(T & pvalue)
-{
-
-
-	if (akt_sym.sym_code == SYM_INTEGER || akt_sym.sym_code == SYM_DOUBLE) {
-
-		T pval;
-		pval.pre_init(pvalue);
-		pval.set_double(akt_sym.vald);
-		pvalue = pval;
-
-		akt_sym = lex.getsym();
-
-		return 0;
-
-	} else if (akt_sym.sym_code == SYM_LPAREN) {
-
-		akt_sym = lex.getsym();
-
-		int err = parse_expression(pvalue);
-
-		if (err) {
-			return err;
-		}
-
-		if (akt_sym.sym_code == SYM_RPAREN) {
-
-			akt_sym = lex.getsym();
-
-			return 0;
-
-		} else {
-
-			assert(0);
-			return ERR_NO_RPAREN;
-		}
-	} else if (akt_sym.sym_code == SYM_VARIABLE) {
-
-		T pval;
-		pval.pre_init(pvalue);
-		pval.set_ident(akt_sym.ident);
-		pvalue = pval;
-
-		akt_sym = lex.getsym();
-
-		return 0;
-
-	} else {
-		assert(0);
-		return ERR_BASE_MALFORMED;
-	}
-	return 0;
-}
 
 
 

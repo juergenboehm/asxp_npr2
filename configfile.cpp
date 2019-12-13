@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <string>
 
 #include <QString>
 #include <QFile>
@@ -7,6 +8,7 @@
 
 
 #include "configfile.h"
+#include "expr.h"
 
 using namespace std;
 
@@ -38,6 +40,73 @@ void InputData::readSettings(int & cnt_blocks) {
 
         if (line.trimmed().length() == 0) {
         	continue;
+        }
+
+        if (line.mid(0, 8) == "surfpoly") {
+
+        	SettingsBlock surfsettings;
+
+        	QStringList sl = line.split(' ');
+
+        	QString surftitle = sl[1];
+
+        	cout << "surftitle = " << surftitle.toLatin1().data() << endl;
+
+        	surfsettings.block_name = surftitle;
+
+        	if (sl.size() > 2) {
+
+        		surfsettings.smap["manifold"] = sl[2];
+
+        	}
+
+        	QString module = "";
+
+        	while (!in.atEnd()) {
+        		QString line1 = in.readLine();
+
+        		if (line1.mid(0,7) == "surfend") {
+        			break;
+        		}
+
+        		module += line1;
+        	}
+
+        	std::string module_str = module.toLatin1().data();
+
+        	Ex mod1;
+
+        	read_module(module_str, mod1);
+
+        	//cout << "mod1:" << endl;
+
+        	//cout << to_str_infix(mod1) << endl;
+
+        	Poly<double> retpoly(5);
+
+        	assert(is_nil(eval_statement_list(mod1, retpoly)));
+
+        	//cout << "retpoly = " << retpoly.to_str() << endl;
+
+
+
+        	QString surffun = retpoly.to_str().c_str();
+
+        	QStringList auxlis = surffun.split(':');
+
+        	surffun = auxlis[1];
+
+        	cout << "surffun = " << surffun.toLatin1().data() << endl;
+
+        	surfsettings.smap["poly"] = surffun;
+
+           	settings_list.push_back(surfsettings);
+
+            ++cnt_blocks;
+
+            continue;
+
+
         }
 
         if (line.mid(0, 4) == "surf") {

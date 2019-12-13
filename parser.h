@@ -1,8 +1,9 @@
 
-#ifndef __parser_h
-#define __parser_h
+#ifndef __parser_h_
+#define __parser_h_
 
 #include <string>
+#include <memory>
 
 #include <assert.h>
 
@@ -22,6 +23,11 @@
 #define SYM_LPAREN 20
 #define SYM_RPAREN 21
 #define SYM_SEMICOLON 30
+#define SYM_COMMA 31
+#define SYM_EQUAL 32
+#define SYM_LBRACKET 33
+#define SYM_RBRACKET 34
+#define SYM_PERIOD 35
 
 #define SYM_INTEGER 40
 #define SYM_DOUBLE 41
@@ -36,6 +42,11 @@
 #define ERR_NUM_AFTER_EXPO 10
 #define ERR_NO_RPAREN 11
 #define ERR_BASE_MALFORMED	12
+#define ERR_SYMBOL_EXPECTED	13
+#define ERR_EQUALSIGN_EXPECTED	14
+#define ERR_NO_LPAREN	15
+#define ERR_NO_RBRACKET	16
+#define ERR_BAD_STATEMENT_DELIM 17
 
 
 
@@ -65,6 +76,7 @@ public:
 				return 255;
 			}
 			is_end = 0;
+			//std::cout << s[pos];
 			return s[pos];
 		}
 
@@ -177,6 +189,219 @@ public:
 	Token akt_sym;
 
 };
+
+template< class T>
+int ParserExpr<T>::parse_expression(T & pvalue)
+{
+
+	T ptemp;
+
+	ptemp.pre_init(pvalue);
+
+	bool first_minus = false;
+
+	if (akt_sym.sym_code == SYM_PLUS) {
+		akt_sym = lex.getsym();
+	} else if (akt_sym.sym_code == SYM_MINUS) {
+		akt_sym = lex.getsym();
+		first_minus = true;
+	};
+
+	int err = parse_term(ptemp);
+
+	if (err) {
+		return err;
+	}
+
+	if (first_minus) {
+		ptemp.neg();
+	}
+
+
+	do {
+
+		if (akt_sym.sym_code == SYM_PLUS || akt_sym.sym_code == SYM_MINUS) {
+
+			bool is_minus = (akt_sym.sym_code == SYM_MINUS);
+
+			T ptemp1;
+
+			ptemp1.pre_init(pvalue);
+
+			akt_sym = lex.getsym();
+
+			int err = parse_term(ptemp1);
+
+			if (err) {
+				return err;
+			}
+
+			if (is_minus) {
+				ptemp1.neg();
+			}
+
+			ptemp.add(ptemp1);
+
+		} else {
+
+			pvalue = ptemp;
+
+			return 0;
+		}
+
+	} while (1);
+
+	pvalue = ptemp;
+
+	return 0;
+}
+
+
+template<class T>
+int ParserExpr<T>::parse_term(T & pvalue)
+{
+
+	T ptemp;
+
+	ptemp.pre_init(pvalue);
+
+	int err = parse_factor(ptemp);
+
+	if (err) {
+		return err;
+	}
+
+	do {
+
+		if (akt_sym.sym_code == SYM_TIMES) {
+
+			akt_sym = lex.getsym();
+
+			T ptemp1;
+
+			ptemp1.pre_init(pvalue);
+
+			int err = parse_factor(ptemp1);
+
+			if (err) {
+				return err;
+			}
+
+			ptemp.mul(ptemp1);
+
+		} else {
+			pvalue = ptemp;
+			return 0;
+		}
+
+	} while (1);
+
+	pvalue = ptemp;
+
+	return 0;
+}
+
+template<class T>
+int ParserExpr<T>::parse_factor(T & pvalue)
+{
+
+	T ptemp;
+
+	ptemp.pre_init(pvalue);
+
+	int err = parse_base(ptemp);
+
+	if (err) {
+		return err;
+	}
+
+	if (akt_sym.sym_code == SYM_EXPO) {
+
+		akt_sym = lex.getsym();
+
+		if (akt_sym.sym_code == SYM_INTEGER) {
+
+			ptemp.pow(akt_sym.vali);
+
+			akt_sym = lex.getsym();
+
+
+			pvalue = ptemp;
+			return 0;
+
+		} else {
+
+			assert(0);
+			return ERR_NUM_AFTER_EXPO;
+		}
+	} else {
+
+		pvalue = ptemp;
+
+		return 0;
+
+	}
+}
+
+
+
+template<class T>
+int ParserExpr<T>::parse_base(T & pvalue)
+{
+
+
+	if (akt_sym.sym_code == SYM_INTEGER || akt_sym.sym_code == SYM_DOUBLE) {
+
+		T pval;
+		pval.pre_init(pvalue);
+		pval.set_double(akt_sym.vald);
+		pvalue = pval;
+
+		akt_sym = lex.getsym();
+
+		return 0;
+
+	} else if (akt_sym.sym_code == SYM_LPAREN) {
+
+		akt_sym = lex.getsym();
+
+		int err = parse_expression(pvalue);
+
+		if (err) {
+			return err;
+		}
+
+		if (akt_sym.sym_code == SYM_RPAREN) {
+
+			akt_sym = lex.getsym();
+
+			return 0;
+
+		} else {
+
+			assert(0);
+			return ERR_NO_RPAREN;
+		}
+	} else if (akt_sym.sym_code == SYM_VARIABLE) {
+
+		T pval;
+		pval.pre_init(pvalue);
+		pval.set_ident(akt_sym.ident);
+		pvalue = pval;
+
+		akt_sym = lex.getsym();
+
+		return 0;
+
+	} else {
+		assert(0);
+		return ERR_BASE_MALFORMED;
+	}
+	return 0;
+}
+
+
+//#define TEST_PARSER
 
 #ifdef TEST_PARSER
 
@@ -294,9 +519,9 @@ public:
 extern vector<Lexer<Token>::lex_table_line_t> ltbl;
 
 template< class C>
-int read_poly(char* poly_str, Poly<C> & perg)
+int read_poly(std::string poly_str, Poly<C> & perg)
 {
-	GetchClass* p_getch = new GetchString(std::string(poly_str));
+	std::unique_ptr<GetchClass> p_getch(new GetchString(std::string(poly_str)));
 	Lexer<Token> lex(ltbl);
 
 	ParserExpr<PolyExpr> parse_poly(lex);
@@ -319,8 +544,6 @@ int read_poly(char* poly_str, Poly<C> & perg)
 	if (!err) {
 		perg = res.poly;
 	};
-
-	delete p_getch;
 
 	return 0;
 }
