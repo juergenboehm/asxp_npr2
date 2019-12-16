@@ -29,7 +29,7 @@ const double zeye_global = 25;
 __device__ int akt_deg_global;
 
 
-__device__ int gl_max_expo;
+__device__ int gl_max_expo[3];
 
 
 #include "ppoly.cu"
@@ -84,16 +84,20 @@ __device__ double cudaPoly3::eval(double* sl)
 	yy = 1;
 	zz = 1;
 
-	for(i = 0; i <= gl_max_expo; ++i) {
+	for(i = 0; i <= gl_max_expo[0]; ++i) {
 		xl[i] = xx;
-		yl[i] = yy;
-		zl[i] = zz;
-
 		xx *= sl[0];
-		yy *= sl[1];
-		zz *= sl[2];
 	}
 
+	for(i = 0; i <= gl_max_expo[1]; ++i) {
+		yl[i] = yy;
+		yy *= sl[1];
+	}
+
+	for(i = 0; i <= gl_max_expo[2]; ++i) {
+		zl[i] = zz;
+		zz *= sl[2];
+	}
 
 	for(i = 0; i < len; ++i) {
 		if (coefs[i] != 0) {
@@ -808,21 +812,21 @@ void gpu_compute_colmat(double a, double b, int xmax, int ymax, const cudaPoly3 
 	
 	int akt_deg_global_host = -1;
 	
-	int gl_max_expo_host = -1;
+	int gl_max_expo_host[3] = {-1, -1, -1};
 
 	for(int i = 0; i < 40; ++i) {
 		int degi = f3_h.xexpo[i] + f3_h.yexpo[i] + f3_h.zexpo[i];
 		if (degi > akt_deg_global_host) {
 			akt_deg_global_host = degi;
 		}
-		if (f3_h.xexpo[i] > gl_max_expo_host) {
-			gl_max_expo_host = f3_h.xexpo[i];
+		if (f3_h.xexpo[i] > gl_max_expo_host[0]) {
+			gl_max_expo_host[0] = f3_h.xexpo[i];
 		}
-		if (f3_h.yexpo[i] > gl_max_expo_host) {
-			gl_max_expo_host = f3_h.yexpo[i];
+		if (f3_h.yexpo[i] > gl_max_expo_host[1]) {
+			gl_max_expo_host[1] = f3_h.yexpo[i];
 		}
-		if (f3_h.zexpo[i] > gl_max_expo_host) {
-			gl_max_expo_host = f3_h.zexpo[i];
+		if (f3_h.zexpo[i] > gl_max_expo_host[2]) {
+			gl_max_expo_host[2] = f3_h.zexpo[i];
 		}
 	}
 
@@ -847,8 +851,7 @@ void gpu_compute_colmat(double a, double b, int xmax, int ymax, const cudaPoly3 
 	CCE( cudaMemcpyToSymbol(akt_deg_global, &akt_deg_global_host, sizeof(int),
 					0, cudaMemcpyHostToDevice ) );
 
-	CCE( cudaMemcpyToSymbol(gl_max_expo, &gl_max_expo_host, sizeof(int),
-					0, cudaMemcpyHostToDevice ) );
+	CCE( cudaMemcpyToSymbol(gl_max_expo, &gl_max_expo_host[0], 3 * sizeof(int) ) );
 
 
 
