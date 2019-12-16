@@ -17,9 +17,9 @@ public:
 	int len;
 
 #ifndef NOCUDA
-	__device__ __host__ int degree();
-	__device__ __host__ cudaPoly3 & diff(int iv);
-	__device__ __host__ double eval(double* sl);
+	__device__  int degree();
+	__device__  cudaPoly3 & diff(int iv);
+	__device__  double eval(double* sl);
 #else
 	int degree();
 	cudaPoly3 & diff(int iv);

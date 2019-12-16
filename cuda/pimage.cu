@@ -29,9 +29,12 @@ const double zeye_global = 25;
 __device__ int akt_deg_global;
 
 
+__device__ int gl_max_expo;
+
+
 #include "ppoly.cu"
 
-__host__ __device__ int cudaPoly3::degree()
+ __device__ int cudaPoly3::degree()
 {
 	int i;
 	int deg = 0;
@@ -45,7 +48,7 @@ __host__ __device__ int cudaPoly3::degree()
 	return deg;
 }
 
-__host__ __device__ cudaPoly3 & cudaPoly3::diff(int iv)
+__device__ cudaPoly3 & cudaPoly3::diff(int iv)
 {
 	int i;
 	for(i = 0; i < len; ++i) {
@@ -67,19 +70,42 @@ __host__ __device__ cudaPoly3 & cudaPoly3::diff(int iv)
 
 }
 
-__host__ __device__ double cudaPoly3::eval(double* sl)
+__device__ double cudaPoly3::eval(double* sl)
 {
 	double val = 0;
 	int i;
+
+	const int max_expo = 15;
+
+	double xx, yy, zz;
+	double xl[max_expo], yl[max_expo], zl[max_expo];
+
+	xx = 1;
+	yy = 1;
+	zz = 1;
+
+	for(i = 0; i <= gl_max_expo; ++i) {
+		xl[i] = xx;
+		yl[i] = yy;
+		zl[i] = zz;
+
+		xx *= sl[0];
+		yy *= sl[1];
+		zz *= sl[2];
+	}
+
+
 	for(i = 0; i < len; ++i) {
 		if (coefs[i] != 0) {
-			val += coefs[i] * pow(sl[0], xexpo[i]) * pow(sl[1], yexpo[i]) * pow(sl[2], zexpo[i]);
+			val += coefs[i] * xl[xexpo[i]] * yl[yexpo[i]] * zl[zexpo[i]];
+
+			//val += coefs[i] * pow(sl[0], xexpo[i]) * pow(sl[1], yexpo[i]) * pow(sl[2], zexpo[i]);
 		}
 	}
 	return val;
 }
 
-__host__ __device__ void print_cudaPoly3(cudaPoly3 & pol)
+__device__ void print_cudaPoly3(cudaPoly3 & pol)
 {
 	for (int i = 0; i < pol.len; ++i) {
 		printf("%f * x^%d y^%d z^%d + ", pol.coefs[i], pol.xexpo[i], pol.yexpo[i], pol.zexpo[i]);
@@ -782,10 +808,21 @@ void gpu_compute_colmat(double a, double b, int xmax, int ymax, const cudaPoly3 
 	
 	int akt_deg_global_host = -1;
 	
+	int gl_max_expo_host = -1;
+
 	for(int i = 0; i < 40; ++i) {
 		int degi = f3_h.xexpo[i] + f3_h.yexpo[i] + f3_h.zexpo[i];
 		if (degi > akt_deg_global_host) {
 			akt_deg_global_host = degi;
+		}
+		if (f3_h.xexpo[i] > gl_max_expo_host) {
+			gl_max_expo_host = f3_h.xexpo[i];
+		}
+		if (f3_h.yexpo[i] > gl_max_expo_host) {
+			gl_max_expo_host = f3_h.yexpo[i];
+		}
+		if (f3_h.zexpo[i] > gl_max_expo_host) {
+			gl_max_expo_host = f3_h.zexpo[i];
 		}
 	}
 
@@ -809,6 +846,11 @@ void gpu_compute_colmat(double a, double b, int xmax, int ymax, const cudaPoly3 
 
 	CCE( cudaMemcpyToSymbol(akt_deg_global, &akt_deg_global_host, sizeof(int),
 					0, cudaMemcpyHostToDevice ) );
+
+	CCE( cudaMemcpyToSymbol(gl_max_expo, &gl_max_expo_host, sizeof(int),
+					0, cudaMemcpyHostToDevice ) );
+
+
 
 	CCE( cudaMemcpyToSymbol(f3, &f3_h, sizeof(cudaPoly3), 0, cudaMemcpyHostToDevice) );
 
