@@ -653,6 +653,7 @@ Ex evalsimp(Ex e, const ExEnviron & env, bool deep)
 
 int ex_to_poly(Ex e, Poly<double> & pol)
 {
+
 	if (is_symbol(e)) {
 		std::string v = e.get_name();
 		read_poly(v, pol);
@@ -662,6 +663,7 @@ int ex_to_poly(Ex e, Poly<double> & pol)
 	if (is_val(e)) {
 		Poly<double> pol1(e.get_val(), 0, 0, pol.nvars);
 		pol = pol1;
+		return 0;
 	}
 
 	Ex op = get_op(e);
@@ -710,6 +712,7 @@ int ex_to_poly(Ex e, Poly<double> & pol)
 		}
 
 	} else if (nargs == 1) {
+
 		if (op.get_name() == "-") {
 			pol1.mul(Poly<double>(-1, 0, 0, pol.nvars));
 			pol = pol1;
@@ -717,6 +720,9 @@ int ex_to_poly(Ex e, Poly<double> & pol)
 		} else {
 			assert(0);
 		}
+	} else
+	{
+		return 0;
 	}
 }
 

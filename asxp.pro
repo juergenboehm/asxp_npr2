@@ -59,13 +59,13 @@ TARGET = asxp
 LIBS += -L/usr/lib/x86_64-linux-gnu
 LIBS += -L/usr/local/lib
 
-LIBS += -lboost_system
-LIBS += -lboost_thread
+#LIBS += -lboost_system
+#LIBS += -lboost_thread
 
 LIBS += -lGLU
 
-LIBS += -lCGAL
-LIBS += -lCGAL_Core
+#LIBS += -lCGAL
+#LIBS += -lCGAL_Core
 
 LIBS += -lgmp
 # not really needed for me, but added since gmp had to be added too
@@ -73,8 +73,11 @@ LIBS += -lmpfr
 
 LIBS += -lgts -lglib-2.0 -lm
 
-LIBS += -L./cuda/lib -L/usr/local/cuda/lib64 -L/usr/lib -lasxp -lcuda -lcudart -lcudadevrt
+LIBS += -L./cuda/lib -L/usr/local/cuda-11.2/lib64 -L/usr/lib -lasxp -lcuda -lcudart -lcudadevrt
 
+INCLUDEPATH += /home/juergen/software/boost/local/boost_1_72_0/include
+
+INCLUDEPATH += /home/juergen/software/CGAL/CGAL-5.2.1/include
 
 
 #QMAKE_CXXFLAGS += -g
